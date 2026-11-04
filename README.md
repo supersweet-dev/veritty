@@ -1,38 +1,28 @@
 <p align="center">
   <h1 align="center">VeriTTY</h1>
-  <p align="center"><strong>The Terminal-First, Bloat-Free Code-OSS Fork.</strong></p>
+  <p align="center">A terminal-first Code-OSS fork for tiling window managers and multi-monitor setups.</p>
   <p align="center">
-    <em>Open Source • AI-Architected • Tiling-WM & Multi-Monitor Friendly</em>
-  </p>
-  <p align="center">
-    <a href="#philosophy">Philosophy</a> •
-    <a href="#architecture">Architecture</a> •
-    <a href="#key-features">Key Features</a> •
-    <a href="#cli--ipc">CLI & IPC</a> •
-    <a href="#roadmap">Roadmap</a> •
-    <a href="#building-from-source">Building</a> •
-    <a href="#contributing">Contributing</a>
+    <a href="#design">Design</a> |
+    <a href="#architecture">Architecture</a> |
+    <a href="#features">Features</a> |
+    <a href="#shell-ipc">Shell IPC</a> |
+    <a href="#roadmap">Roadmap</a> |
+    <a href="#build">Build</a> |
+    <a href="#license">License</a>
   </p>
 </p>
 
 ---
 
-## 💡 Philosophy
+## Design
 
-Modern IDEs treat the terminal as a second-class citizen—a cramped 300px panel squeezed into the bottom of an editor grid. Meanwhile, terminal multiplexers (tmux, zellij) lack the rich Language Server Protocol (LSP), debugging (DAP), and extension ecosystems of modern code editors.
+Standard code editors place the terminal in a panel docked beneath editor tabs. Developers who work from the command line face friction with this layout: logs lose column width, tabs crowd the display, and context shifts away from the shell.
 
-**VeriTTY inverts the paradigm:**
-> **Your terminal is the cockpit. Everything else is a satellite.**
-
-* The **main window** is a high-performance terminal multiplexer canvas.
-* **Code editors, diff viewers, and previews** launch as detached, native OS auxiliary windows.
-* **Sidebars and tool panels** become dynamic, auto-collapsing drawers that peek in only when needed and vanish when focus returns to your shell.
-* Built entirely on an **open-source, debloated Code-OSS core**, stripping telemetry, heavy background daemons, and tracking bloat.
-* **AI-Architected & Built**: Designed from scratch through collaborative AI agentic pairing, maintaining clean modularity and verifiable patches against upstream.
+VeriTTY assigns the main window to the terminal multiplexer. File editors, diff viewers, and previews open as detached native OS windows. Your desktop window manager controls their placement, sizing, and workspaces. Tool drawers for the file tree, git status, and diagnostics slide over the terminal on demand and dismiss when you resume typing in the shell.
 
 ---
 
-## 🏛️ Architecture
+## Architecture
 
 ```
                                  ┌──────────────────────────────────────────┐
@@ -59,101 +49,97 @@ Modern IDEs treat the terminal as a second-class citizen—a cramped 300px panel
 
 ---
 
-## ✨ Key Features
+## Features
 
-### 1. 🖥️ Terminal-First Cockpit
-The primary canvas is your terminal grid. Powered by hardware-accelerated PTY rendering, splits, tabs, and full shell integrations. Focus defaults to the command line, where power users live.
+### Terminal Grid as Primary Canvas
+The main window renders a terminal grid powered by `xterm.js` and local pseudoterminals. It supports splits, tabs, and OSC escape sequences. Input goes to the shell prompt without passing through editor focus layers.
 
-### 2. 🪟 Detached Native Sub-Windows
-Opening a file or preview does not hijack your terminal view. VeriTTY dispatches editors to native OS auxiliary windows:
-* Native integration with tiling window managers (**i3, Sway, yabai, AeroSpace, Hyprland, bspwm**).
-* Effortless multi-monitor setups (e.g., Terminal cockpit on primary monitor, code editors snapped across secondary monitors).
-* Instant dismissal: close or save an editor to return seamless control to your shell session.
+### Detached Auxiliary Windows for Files
+Opening a file or jumping to a definition launches a native OS auxiliary window.
+* You can tile editor windows with i3, Sway, Hyprland, or yabai.
+* You can keep the terminal on one monitor and place editor windows on another.
 
-### 3. 🗄️ Dynamized Drawers
-Static 300px side panels are gone. Drawers for **File Explorer**, **Source Control (Git)**, **Search**, and **Diagnostics**:
-* Float or slide into view via hotkeys or CLI signals.
-* Context-reactive: peek open automatically on build errors or git status changes.
-* Automatically dismiss when you click or type back into the terminal.
+### Overlay Drawers
+File trees, git panels, and diagnostics render as sliding overlays rather than fixed columns.
+* Hotkeys (`Ctrl+B`, `Ctrl+Shift+G`) open file navigation or staged changes.
+* Escape or new keystrokes in the terminal dismiss the drawer. The terminal retains its column count without resize interruptions.
 
-### 4. 🧼 Zero Telemetry & Stripped Bloat
-Derived from a debloated Code-OSS base:
-* Stripped of Microsoft telemetry, background analytics, crash uploaders, and marketing payloads.
-* Minimalist memory footprint and blazing startup performance compared to stock VS Code.
-* Compatible with Open VSX and the standard VS Code extension ecosystem.
+### Telemetry Removal
+The build removes Microsoft Application Insights, crash report uploads, and experiment services. Extension queries route to Open VSX by default.
 
-### 5. ⚡ Bi-directional CLI & Shell IPC
-Control your IDE straight from your prompt:
+---
+
+## Shell IPC
+
+A command-line client controls the running instance over a local domain socket:
 ```bash
-# Open a file in a detached native editor window at a specific line
+# Open a file at a specific line in a detached window
 veritty open src/index.ts:42:10
 
-# Open a 3-way or 2-way diff in a floating window
+# Open a diff between two files
 veritty diff old.py new.py
 
-# Programmatically toggle or peek dynamic drawers
+# Toggle or inspect dynamic drawers
 veritty drawer toggle git
 veritty drawer peek diagnostics
 
-# Pipe stdout directly into a detached scratchpad editor
+# Pipe standard input into a temporary buffer
 cat build.log | veritty scratch
 ```
 
 ---
 
-## 🤖 AI-Built & Open Source
+## Codebase Structure
 
-VeriTTY is developed transparently as an open-source project architected and built in collaboration with autonomous AI agents. 
-
-* **Clean Patch Separation**: All modifications to upstream Code-OSS are maintained as isolated, auditable git patches in [`patches/`](file:///root/projects/veritty/patches).
-* **Modular CLI Tooling**: The CLI and IPC daemon layer live independently in [`cli/`](file:///root/projects/veritty/cli).
-* **Automated Sync Harness**: Automated tooling tracks upstream Code-OSS releases, validates patches, and verifies builds.
+The project maintains modifications to upstream Code-OSS as isolated git patches:
+* Patches sit in `patches/` and apply against pinned release tags.
+* The CLI client lives in `cli/`.
+* Shell integration hooks live in `shell/`.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
-See [ROADMAP.md](file:///root/projects/veritty/ROADMAP.md) for detailed milestone tracking, technical specifications, and development phases.
+Track implementation progress in [ROADMAP.md](file:///root/projects/veritty/ROADMAP.md).
 
 | Phase | Milestone | Status |
 | :--- | :--- | :--- |
-| **0** | Architecture Specification & IPC Protocol Design | 🟢 In Progress |
-| **1** | Debloated Code-OSS Upstream Harness & Patch Engine | 🟡 Up Next |
-| **2** | Workbench Inversion (Terminal as Root, Native Aux Windows) | ⚪ Planned |
-| **3** | Dynamic Drawer Overlay & Context Engine | ⚪ Planned |
-| **4** | `veritty` CLI Tool & Shell Hook Integrations | ⚪ Planned |
-| **5** | Cross-Platform Bundling (Linux, macOS, Windows) | ⚪ Planned |
+| 0 | Architecture & IPC Protocol Specification | Completed |
+| 1 | Upstream Base Harness & Patch Management | Completed |
+| 2 | Workbench Inversion & Auxiliary Window Routing | In Progress |
+| 3 | Dynamic Drawer Overlays | Planned |
+| 4 | CLI Client & Shell Hooks | Planned |
+| 5 | Packaging | Planned |
 
 ---
 
-## 🛠️ Building from Source
+## Build
 
 ### Prerequisites
-* **Node.js** >= 20.x
-* **npm** >= 10.x
-* **Git**
-* Standard build essentials for native Node modules (Python 3, C/C++ compiler)
+* Node.js 20 or higher
+* npm 10 or higher
+* Git
+* C/C++ compiler and Python 3 (for native modules)
 
-### Setup
+### Instructions
 ```bash
-# Clone the repository
 git clone https://github.com/supersweet-dev/veritty.git
 cd veritty
 
-# Install CLI dependencies
+# Build the CLI
 cd cli && npm install && npm run build
 cd ..
 
-# Fetch upstream base and apply VeriTTY patches
+# Fetch upstream base and apply patches
 ./build/fetch-base.sh
 ./build/apply-patches.sh
 
-# Build VeriTTY
+# Compile
 ./build/build.sh
 ```
 
 ---
 
-## 📄 License
+## License
 
-VeriTTY is licensed under the [MIT License](file:///root/projects/veritty/LICENSE).
+MIT License. See [LICENSE](file:///root/projects/veritty/LICENSE).

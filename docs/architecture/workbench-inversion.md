@@ -1,19 +1,19 @@
 # Workbench Inversion: Terminal as Root Canvas
 
-This document outlines the technical changes required to invert the Code-OSS workbench layout hierarchy, promoting the terminal to the primary canvas and routing editor instances to detached native auxiliary windows.
+This document details the modifications that place the terminal multiplexer in the main window and route file editors to detached desktop windows.
 
 ---
 
-## 1. Upstream Code-OSS Layout Hierarchy
+## Upstream Layout Hierarchy
 
-In upstream VS Code (`src/vs/workbench/browser/layout.ts`):
-* The layout grid is rooted around the `EditorPart`.
-* The `SidebarPart`, `AuxiliaryBarPart`, and `PanelPart` (which contains the terminal) are subordinate parts docked around the central editor area.
-* Editors are opened via `IEditorService.openEditor()`, which resolves an `IEditorGroup` in the central `EditorPart` and renders the editor DOM within the main window.
+In standard Code-OSS (`src/vs/workbench/browser/layout.ts`):
+* The layout grid anchors around `EditorPart`.
+* `SidebarPart`, `AuxiliaryBarPart`, and `PanelPart` dock around the central editor area.
+* `IEditorService.openEditor()` resolves an `IEditorGroup` in the central editor grid and renders the buffer in the main window.
 
 ---
 
-## 2. The VeriTTY Inverted Hierarchy
+## Inverted Layout
 
 In VeriTTY:
 ```
@@ -43,27 +43,27 @@ In VeriTTY:
 
 ---
 
-## 3. Implementation Blueprint
+## Implementation Details
 
-### A. Routing `IEditorService.openEditor` to Auxiliary Windows
-In `src/vs/workbench/services/editor/browser/editorService.ts`:
-1. Intercept `openEditor` invocations.
-2. If `options.target` is not explicitly set to in-cockpit, delegate the creation to `IAuxiliaryWindowService.createAuxiliaryWindow()`.
-3. Wrap the editor group inside the newly created native OS `BrowserWindow`.
-4. Provide seamless focus transitions: the user can edit code, save (`Ctrl+S`), and when closing the window (`Ctrl+W`), focus cleanly returns to the terminal prompt that initiated the edit.
+### Routing `IEditorService.openEditor` to Auxiliary Windows
+In `src/vs/workbench/services/editor/common/editorGroupFinder.ts`:
+1. Check candidate group locations.
+2. If the resolved group belongs to the main window (`mainPart`), redirect to an active auxiliary editor part or invoke `editorGroupService.createAuxiliaryEditorPart()`.
+3. Wrap the editor group inside the native OS `BrowserWindow`.
+4. When you save and close the editor window (`Ctrl+W`), focus returns to the shell.
 
-### B. Promoting `TerminalPart` to Master Grid Container
-In `src/vs/workbench/browser/parts/workbench.ts`:
-1. Register `TerminalPart` as the central non-collapsible component instead of `EditorPart`.
-2. Configure `TerminalGroupService` and `TerminalService` to initialize immediately on startup without waiting for panel visibility toggles.
-3. Automatically attach the active terminal to the default shell (or restored multiplexer session).
+### Main Window Layout Keys
+In `src/vs/workbench/browser/layout.ts`:
+1. Set `PANEL_HIDDEN` to `false` by default.
+2. Set `EDITOR_HIDDEN` to `true` by default in the main window.
+3. Register `TERMINAL_VIEW_ID` with `order: 0` in `terminal.contribution.ts` so the terminal initializes as the primary panel view on boot.
 
-### C. Native Window Manager Hints
-For auxiliary windows, configure Electron window options:
+### Window Manager Integration
+For auxiliary windows, configure Electron window properties:
 * `hasShadow: true`
-* `frame: true` (or customizable frameless mode for tiling window managers)
-* `titleBarStyle: 'hiddenInset'` (macOS) or native client decorations (Linux/Windows)
-* Proper `wmClass` / `appId` (`veritty-editor`) allowing window managers to write rules:
+* `frame: true` (or frameless mode for tiling window managers)
+* `titleBarStyle: 'hiddenInset'` on macOS or native borders on Linux and Windows
+* Set `wmClass` and `appId` to `veritty-editor` for window rules:
   ```
   # Example i3 / sway rule:
   for_window [app_id="veritty-editor"] floating enable, resize set 900 700

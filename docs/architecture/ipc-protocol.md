@@ -1,28 +1,20 @@
-# VeriTTY IPC Protocol Specification
+# IPC Protocol Specification
 
-The VeriTTY IPC protocol enables bidirectional communication between the shell environment, external CLI invocations (`veritty`), and the running VeriTTY Cockpit instance.
-
----
-
-## 1. Transport Layer
-
-* **Unix / Linux / macOS**: Unix domain socket at:
-  ```
-  $XDG_RUNTIME_DIR/veritty/veritty-$UID.sock
-  # Fallback: /tmp/veritty-$UID/veritty.sock
-  ```
-* **Windows**: Named Pipe at:
-  ```
-  \\.\pipe\veritty-$USERNAME
-  ```
-* **Framing**: Newline-delimited JSON (NDJSON) or JSON-RPC 2.0.
+This document defines the socket protocol and message formats used between the `veritty` CLI and the running VeriTTY instance.
 
 ---
 
-## 2. Message Format
+## Transport
 
-Every message sent across the socket conforms to standard JSON-RPC 2.0:
+* **Linux and macOS**: Unix domain socket at `$XDG_RUNTIME_DIR/veritty/veritty-$UID.sock` (fallback: `/tmp/veritty-$UID/veritty.sock`).
+* **Windows**: Named pipe at `\\.\pipe\veritty-$USERNAME`.
+* **Framing**: Newline-delimited JSON-RPC 2.0.
 
+---
+
+## Message Format
+
+Requests:
 ```json
 {
   "jsonrpc": "2.0",
@@ -32,7 +24,7 @@ Every message sent across the socket conforms to standard JSON-RPC 2.0:
 }
 ```
 
-Responses conform to:
+Responses:
 ```json
 {
   "jsonrpc": "2.0",
@@ -44,19 +36,19 @@ Responses conform to:
 
 ---
 
-## 3. Supported Methods
+## Methods
 
-### 3.1 `editor.open`
-Spawns or focuses a detached native OS auxiliary window for a specified file.
+### `editor.open`
+Opens a file in a detached native OS auxiliary window.
 
 **Parameters:**
-* `path` (string, required): Absolute or relative filesystem path.
-* `line` (number, optional): 1-indexed target line number.
-* `column` (number, optional): 1-indexed target column number.
-* `preview` (boolean, optional): Whether to open in preview mode (default: `false`).
-* `reUseWindow` (boolean, optional): Whether to reuse an existing detached editor window if one is open.
+* `path` (string, required): Filesystem path.
+* `line` (number, optional): Target line number (1-indexed).
+* `column` (number, optional): Target column number (1-indexed).
+* `preview` (boolean, optional): Open in preview mode (default: `false`).
+* `reUseWindow` (boolean, optional): Reuse an existing detached window (default: `false`).
 
-**Example Request:**
+**Request Example:**
 ```json
 {
   "jsonrpc": "2.0",
@@ -71,7 +63,7 @@ Spawns or focuses a detached native OS auxiliary window for a specified file.
 }
 ```
 
-**Example Response:**
+**Response Example:**
 ```json
 {
   "jsonrpc": "2.0",
@@ -85,15 +77,15 @@ Spawns or focuses a detached native OS auxiliary window for a specified file.
 
 ---
 
-### 3.2 `editor.diff`
-Opens a detached native auxiliary window displaying a side-by-side or inline diff.
+### `editor.diff`
+Opens a detached diff window comparing two files.
 
 **Parameters:**
-* `originalPath` (string, required): Original file path or git blob identifier.
-* `modifiedPath` (string, required): Modified file path.
-* `title` (string, optional): Display title in the auxiliary window titlebar.
+* `originalPath` (string, required): Baseline file path.
+* `modifiedPath` (string, required): Target file path.
+* `title` (string, optional): Title for the window titlebar.
 
-**Example Request:**
+**Request Example:**
 ```json
 {
   "jsonrpc": "2.0",
@@ -109,14 +101,14 @@ Opens a detached native auxiliary window displaying a side-by-side or inline dif
 
 ---
 
-### 3.3 `drawer.toggle` / `drawer.open` / `drawer.close` / `drawer.peek`
-Controls the dynamic drawer overlay in the VeriTTY Cockpit.
+### `drawer.toggle` / `drawer.open` / `drawer.close` / `drawer.peek`
+Controls overlay drawers in the main window.
 
 **Parameters:**
 * `drawer` (string, required): One of `"explorer"`, `"git"`, `"search"`, `"diagnostics"`, `"extensions"`.
-* `durationMs` (number, optional): For `drawer.peek`, duration in milliseconds before auto-dismissing (default: `3000`).
+* `durationMs` (number, optional): Duration in milliseconds before dismissal when using `drawer.peek` (default: `3000`).
 
-**Example Request:**
+**Request Example:**
 ```json
 {
   "jsonrpc": "2.0",
@@ -131,21 +123,21 @@ Controls the dynamic drawer overlay in the VeriTTY Cockpit.
 
 ---
 
-### 3.4 `editor.scratch`
-Creates a temporary scratchpad buffer populated with content from standard input (stdin).
+### `editor.scratch`
+Opens a detached buffer containing text passed via standard input.
 
 **Parameters:**
-* `content` (string, required): Buffer content.
-* `language` (string, optional): Language identifier for syntax highlighting (e.g., `"json"`, `"markdown"`, `"log"`).
+* `content` (string, required): Buffer contents.
+* `language` (string, optional): Syntax highlighting mode (e.g. `"json"`, `"markdown"`, `"diff"`).
 
 ---
 
-## 4. In-Band OSC Escape Sequences
+## Terminal Escape Sequences
 
-In addition to socket-based IPC, the active terminal multiplexer listens for custom and standard OSC (Operating System Command) sequences embedded in the PTY output stream:
+The terminal parser inspects these escape sequences in the PTY output stream:
 
 | Sequence | Purpose | Syntax |
 | :--- | :--- | :--- |
-| **OSC 133** | Semantic Shell Integration | `\x1b]133;A\x07` (Prompt start), `\x1b]133;C\x07` (Command executed), `\x1b]133;D;<exit_code>\x07` (Exit code) |
-| **OSC 7** | Working Directory Synchronization | `\x1b]7;file://<hostname>/<path>\x07` |
-| **OSC 1337 (VeriTTY Extension)** | Dynamic Drawer & Sub-window triggers | `\x1b]1337;VeriTTY=open:<path>\x07` |
+| **OSC 133** | Semantic shell markers | `\x1b]133;A\x07` (prompt start), `\x1b]133;C\x07` (command run), `\x1b]133;D;<code\x07` (exit status) |
+| **OSC 7** | Working directory reporting | `\x1b]7;file://<host>/<path>\x07` |
+| **OSC 1337** | Drawer and window triggers | `\x1b]1337;VeriTTY=open:<path>\x07` |

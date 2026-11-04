@@ -1,21 +1,21 @@
-# VeriTTY Roadmap & Technical Milestones
+# VeriTTY Roadmap & Milestones
 
-This document details the development roadmap, architectural milestones, and implementation phases for **VeriTTY**.
-
----
-
-## 🎯 Vision & Target State
-
-VeriTTY delivers an ultra-fast, terminal-first developer cockpit:
-1. **Primary Window**: Hardware-accelerated terminal multiplexer (xterm.js/PTY) occupies the central canvas.
-2. **Auxiliary Windows**: Every file edit, diff view, markdown preview, or image viewer opens in a detached native OS window (`BrowserWindow` via `IAuxiliaryWindowService`).
-3. **Dynamic Drawers**: Activity bar, sidebars, and panels are transformed into context-reactive floating drawers that slide in on demand and auto-dismiss.
-4. **Shell IPC**: A dedicated CLI tool (`veritty`) communicates via Unix domain sockets / named pipes and OSC escape sequences.
-5. **Debloated Core**: Zero telemetry, no proprietary hooks, minimal baseline memory.
+This document outlines the milestones and implementation phases for VeriTTY.
 
 ---
 
-## 📅 Milestones
+## Target State
+
+VeriTTY configures a terminal-first workspace:
+1. **Primary Window**: A terminal multiplexer (`xterm.js` and PTY) occupies the main window.
+2. **Auxiliary Windows**: File edits, diffs, and previews open in detached native OS windows (`BrowserWindow` through `IAuxiliaryWindowService`).
+3. **Dynamic Drawers**: File trees, git views, and diagnostics slide in as overlays and dismiss when input returns to the shell.
+4. **Shell IPC**: A CLI client (`veritty`) controls windows and drawers through a local domain socket.
+5. **Debloated Core**: Zero telemetry, no proprietary services, and minimal background memory overhead.
+
+---
+
+## Milestones
 
 ```mermaid
 gantt
@@ -42,81 +42,47 @@ gantt
 ---
 
 ### Phase 0: Architecture & IPC Protocol Specification (Completed)
-- [x] Repository initialization & open-source governance (MIT).
-- [x] Project manifesto & architecture overview ([`README.md`](file:///root/projects/veritty/README.md)).
-- [x] Detailed IPC Protocol Specification ([`docs/architecture/ipc-protocol.md`](file:///root/projects/veritty/docs/architecture/ipc-protocol.md)).
-- [x] Workbench Inversion Specification ([`docs/architecture/workbench-inversion.md`](file:///root/projects/veritty/docs/architecture/workbench-inversion.md)).
-- [x] Dynamic Drawer System Specification ([`docs/architecture/dynamic-drawers.md`](file:///root/projects/veritty/docs/architecture/dynamic-drawers.md)).
+- [x] Repository initialization with MIT license.
+- [x] Project manifesto and design specification in [`README.md`](file:///root/projects/veritty/README.md).
+- [x] Socket protocol and message specification in [`docs/architecture/ipc-protocol.md`](file:///root/projects/veritty/docs/architecture/ipc-protocol.md).
+- [x] Layout inversion specification in [`docs/architecture/workbench-inversion.md`](file:///root/projects/veritty/docs/architecture/workbench-inversion.md).
+- [x] Dynamic drawer specification in [`docs/architecture/dynamic-drawers.md`](file:///root/projects/veritty/docs/architecture/dynamic-drawers.md).
 
 ---
 
 ### Phase 1: Upstream Base & Patch Engine (Completed)
-- [x] **Upstream Base Harness**:
-  - Script to pin and shallow-clone upstream Code-OSS or VSCodium source release ([`build/fetch-base.sh`](file:///root/projects/veritty/build/fetch-base.sh)).
-  - Telemetry scrubbing & Open VSX marketplace configuration ([`patches/01-debloat/001-product-and-telemetry.patch`](file:///root/projects/veritty/patches/01-debloat/001-product-and-telemetry.patch)).
-- [x] **Patch Management System**:
-  - Automated patch application script ([`build/apply-patches.sh`](file:///root/projects/veritty/build/apply-patches.sh)).
-  - Automated patch generation script ([`build/generate-patches.sh`](file:///root/projects/veritty/build/generate-patches.sh)) against clean upstream tag.
-- [x] **Validation**:
-  - All modular patches apply cleanly against Code-OSS tag 1.96.4.
+- [x] Upstream fetch script pinning Code-OSS 1.96.4 in [`build/fetch-base.sh`](file:///root/projects/veritty/build/fetch-base.sh).
+- [x] Telemetry removal and Open VSX marketplace configuration in [`patches/01-debloat/001-product-and-telemetry.patch`](file:///root/projects/veritty/patches/01-debloat/001-product-and-telemetry.patch).
+- [x] Patch applicator script in [`build/apply-patches.sh`](file:///root/projects/veritty/build/apply-patches.sh).
+- [x] Patch export script in [`build/generate-patches.sh`](file:///root/projects/veritty/build/generate-patches.sh).
+- [x] CI verification on GitHub Actions.
 
 ---
 
 ### Phase 2: Workbench Layout Inversion (In Progress)
-- [x] **Terminal Canvas as Root**:
-  - Layout inverted: `PANEL_HIDDEN: false` by default, `EDITOR_HIDDEN: true` by default in main window ([`patches/02-workbench/001-terminal-root-canvas.patch`](file:///root/projects/veritty/patches/02-workbench/001-terminal-root-canvas.patch)).
-  - Terminal registered as order 0 default panel container.
-- [x] **Auxiliary Window Default Routing**:
-  - Intercepted editor group resolution in `editorGroupFinder.ts` ([`patches/03-auxiliary/001-route-editors-to-aux-windows.patch`](file:///root/projects/veritty/patches/03-auxiliary/001-route-editors-to-aux-windows.patch)).
-  - Routed main window editor requests to `createAuxiliaryEditorPart()` (native OS auxiliary windows).
-  - GitHub Actions / build script verifying clean patch application and compilation.
+- [x] Invert main layout keys: `PANEL_HIDDEN: false` and `EDITOR_HIDDEN: true` in [`patches/02-workbench/001-terminal-root-canvas.patch`](file:///root/projects/veritty/patches/02-workbench/001-terminal-root-canvas.patch).
+- [x] Register terminal container as default view (order 0).
+- [x] Route main window editor open requests to `createAuxiliaryEditorPart()` in [`patches/03-auxiliary/001-route-editors-to-aux-windows.patch`](file:///root/projects/veritty/patches/03-auxiliary/001-route-editors-to-aux-windows.patch).
+- [ ] Configure window manager hints (appId `veritty-editor`) for window tiling.
+- [ ] Persist open auxiliary window geometry across restarts.
 
 ---
 
-### Phase 2: Workbench Layout Inversion
-- [ ] **Terminal Canvas as Root**:
-  - Modify `src/vs/workbench/browser/layout.ts` and `workbench.ts` to place `TerminalPart` in the central layout container.
-  - Disable default central `EditorPart` layout requirement.
-- [ ] **Auxiliary Window Default Routing**:
-  - Intercept `IEditorService.openEditor` calls.
-  - Route file opening requests directly through `IAuxiliaryWindowService.createAuxiliaryWindow`.
-  - Configure window attributes: titlebar, lightweight framing, tiling window manager hints.
-- [ ] **State & Session Persistence**:
-  - Persist open terminal layouts and detached window states across application restarts.
+### Phase 3: Dynamic Drawer Overlay System (Planned)
+- [ ] Render `SidebarPart` and `AuxiliaryBarPart` as absolute floating overlays.
+- [ ] Dismiss drawers on terminal keystroke or canvas click.
+- [ ] Add peek timeouts for diagnostics drawers on build errors.
 
 ---
 
-### Phase 3: Dynamic Drawer Overlay System
-- [ ] **Overlay Layout Transition**:
-  - Transform `SidebarPart` and `AuxiliaryBarPart` from flex layout columns into CSS/DOM overlays with backdrop blur / drop shadows.
-  - Implement smooth hardware-accelerated slide-in / slide-out animations.
-- [ ] **Auto-Dismiss Engine**:
-  - Event listener on terminal focus / keypress to automatically collapse active drawers.
-  - Global hotkeys (`Ctrl+B`, `Ctrl+Shift+E`, `Ctrl+Shift+G`, etc.) to toggle drawers.
-- [ ] **Context-Reactive Peeking**:
-  - Expose API to briefly peek a drawer (e.g., diagnostics drawer on test failure, git drawer on branch change).
+### Phase 4: CLI Client & Shell Integration (Planned)
+- [ ] Domain socket IPC client (`cli/`).
+- [ ] Shell hooks for bash, zsh, and fish (`shell/`).
+- [ ] OSC escape sequences for directory tracking and exit status markers.
 
 ---
 
-### Phase 4: `veritty` CLI & Shell Integration
-- [ ] **Lightweight CLI Client (`cli/`)**:
-  - Unix Domain Socket / Named Pipe client with sub-10ms execution overhead.
-  - Commands:
-    - `veritty open <path>[:line[:col]]`
-    - `veritty diff <pathA> <pathB>`
-    - `veritty drawer <toggle|open|close|peek> <name>`
-    - `veritty scratch` (piped stdin to temporary detached editor)
-- [ ] **Shell Integration**:
-  - Out-of-the-box shell hooks for `bash`, `zsh`, and `fish`.
-  - Inject OSC escape sequences for working directory sync, command tracking, and exit code reporting.
-  - Custom shell prompt helpers for drawer notifications.
-
----
-
-### Phase 5: Distribution & Packaging
-- [ ] Multi-platform build targets:
-  - Linux: AppImage, `.deb`, `.rpm`, Flatpak, Arch AUR.
-  - macOS: Universal `.dmg` with native macOS window management.
-  - Windows: Portable zip & installer with Windows Terminal / ConPTY support.
-- [ ] Curated default settings & themes tailored for terminal-first minimalism.
-- [ ] Documentation site and community release announcements.
+### Phase 5: Distribution & Packaging (Planned)
+- [ ] Linux binaries: AppImage, deb, tarball.
+- [ ] macOS build: universal dmg.
+- [ ] Release automation on merge to `main`.
