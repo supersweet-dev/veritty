@@ -1,0 +1,39 @@
+diff --git a/product.json b/product.json
+index 8411532..6fedc04 100644
+--- a/product.json
++++ b/product.json
+@@ -1,11 +1,15 @@
+ {
+-	"nameShort": "Code - OSS",
+-	"nameLong": "Code - OSS",
+-	"applicationName": "code-oss",
+-	"dataFolderName": ".vscode-oss",
+-	"win32MutexName": "vscodeoss",
++	"nameShort": "VeriTTY",
++	"nameLong": "VeriTTY",
++	"applicationName": "veritty",
++	"dataFolderName": ".veritty",
++	"win32MutexName": "veritty",
+ 	"licenseName": "MIT",
+-	"licenseUrl": "https://github.com/microsoft/vscode/blob/main/LICENSE.txt",
++	"licenseUrl": "https://github.com/veritty-org/veritty/blob/main/LICENSE",
++	"extensionsGallery": {
++		"serviceUrl": "https://open-vsx.org/vscode/gallery",
++		"itemUrl": "https://open-vsx.org/vscode/item"
++	},
+ 	"serverLicenseUrl": "https://github.com/microsoft/vscode/blob/main/LICENSE.txt",
+ 	"serverGreeting": [],
+ 	"serverLicense": [],
+diff --git a/src/vs/platform/telemetry/common/telemetryService.ts b/src/vs/platform/telemetry/common/telemetryService.ts
+index 51fbb8f..79e2d10 100644
+--- a/src/vs/platform/telemetry/common/telemetryService.ts
++++ b/src/vs/platform/telemetry/common/telemetryService.ts
+@@ -216,7 +216,7 @@ Registry.as<IConfigurationRegistry>(Extensions.Configuration).registerConfigurat
+ 				localize('telemetry.telemetryLevel.off', "Disables all product telemetry.")
+ 			],
+ 			'markdownDescription': getTelemetryLevelSettingDescription(),
+-			'default': TelemetryConfiguration.ON,
++			'default': TelemetryConfiguration.OFF,
+ 			'restricted': true,
+ 			'scope': ConfigurationScope.APPLICATION,
+ 			'tags': ['usesOnlineServices', 'telemetry']

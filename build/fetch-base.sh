@@ -4,7 +4,7 @@ set -euo pipefail
 # VeriTTY Upstream Base Fetcher
 # Clones or checks out a shallow copy of upstream Code-OSS / VSCodium
 
-CODE_TAG="${CODE_TAG:-1.95.3}"
+CODE_TAG="${CODE_TAG:-1.96.4}"
 UPSTREAM_REPO="${UPSTREAM_REPO:-https://github.com/microsoft/vscode.git}"
 UPSTREAM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/build/upstream"
 

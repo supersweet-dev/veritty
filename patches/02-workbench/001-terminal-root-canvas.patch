@@ -1,0 +1,40 @@
+diff --git a/src/vs/workbench/browser/layout.ts b/src/vs/workbench/browser/layout.ts
+index eb8657f..6c886c1 100644
+--- a/src/vs/workbench/browser/layout.ts
++++ b/src/vs/workbench/browser/layout.ts
+@@ -604,9 +604,9 @@ export abstract class Layout extends Disposable implements IWorkbenchLayoutServi
+ 		this.stateModel = new LayoutStateModel(this.storageService, this.configurationService, this.contextService, this.parent);
+ 		this.stateModel.load();
+ 
+-		// Both editor and panel should not be hidden on startup
++		// VeriTTY: Cockpit window guarantees the terminal (panel) is visible on startup
+ 		if (this.stateModel.getRuntimeValue(LayoutStateKeys.PANEL_HIDDEN) && this.stateModel.getRuntimeValue(LayoutStateKeys.EDITOR_HIDDEN)) {
+-			this.stateModel.setRuntimeValue(LayoutStateKeys.EDITOR_HIDDEN, false);
++			this.stateModel.setRuntimeValue(LayoutStateKeys.PANEL_HIDDEN, false);
+ 		}
+ 
+ 		this._register(this.stateModel.onDidChangeState(change => {
+@@ -2548,8 +2548,8 @@ const LayoutStateKeys = {
+ 	// Part Visibility
+ 	ACTIVITYBAR_HIDDEN: new RuntimeStateKey<boolean>('activityBar.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, false, true),
+ 	SIDEBAR_HIDDEN: new RuntimeStateKey<boolean>('sideBar.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+-	EDITOR_HIDDEN: new RuntimeStateKey<boolean>('editor.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+-	PANEL_HIDDEN: new RuntimeStateKey<boolean>('panel.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, true),
++	EDITOR_HIDDEN: new RuntimeStateKey<boolean>('editor.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, true),
++	PANEL_HIDDEN: new RuntimeStateKey<boolean>('panel.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, false),
+ 	AUXILIARYBAR_HIDDEN: new RuntimeStateKey<boolean>('auxiliaryBar.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, true),
+ 	STATUSBAR_HIDDEN: new RuntimeStateKey<boolean>('statusBar.hidden', StorageScope.WORKSPACE, StorageTarget.MACHINE, false, true)
+ 
+diff --git a/src/vs/workbench/contrib/terminal/browser/terminal.contribution.ts b/src/vs/workbench/contrib/terminal/browser/terminal.contribution.ts
+index 452daef..57bef58 100644
+--- a/src/vs/workbench/contrib/terminal/browser/terminal.contribution.ts
++++ b/src/vs/workbench/contrib/terminal/browser/terminal.contribution.ts
+@@ -110,7 +110,7 @@ const VIEW_CONTAINER = Registry.as<IViewContainersRegistry>(ViewContainerExtensi
+ 	ctorDescriptor: new SyncDescriptor(ViewPaneContainer, [TERMINAL_VIEW_ID, { mergeViewWithContainerWhenSingleView: true }]),
+ 	storageId: TERMINAL_VIEW_ID,
+ 	hideIfEmpty: true,
+-	order: 3,
++	order: 0,
+ }, ViewContainerLocation.Panel, { doNotRegisterOpenCommand: true, isDefault: true });
+ Registry.as<IViewsRegistry>(ViewContainerExtensions.ViewsRegistry).registerViews([{
+ 	id: TERMINAL_VIEW_ID,

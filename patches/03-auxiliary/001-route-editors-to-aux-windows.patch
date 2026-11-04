@@ -1,0 +1,25 @@
+diff --git a/src/vs/workbench/services/editor/common/editorGroupFinder.ts b/src/vs/workbench/services/editor/common/editorGroupFinder.ts
+index a39a122..ace3b72 100644
+--- a/src/vs/workbench/services/editor/common/editorGroupFinder.ts
++++ b/src/vs/workbench/services/editor/common/editorGroupFinder.ts
+@@ -173,6 +173,20 @@ function doFindGroup(input: EditorInputWithOptions | IUntypedEditorInput, prefer
+ 		}
+ 	}
+ 
++	// VeriTTY: If the resolved candidate group resides in the main window (terminal cockpit),
++	// route it to a detached native auxiliary window instead.
++	if (group && !(group instanceof Promise)) {
++		const part = editorGroupService.getPart(group);
++		if (part === editorGroupService.mainPart) {
++			const auxParts = editorGroupService.parts.filter(p => p !== editorGroupService.mainPart);
++			if (auxParts.length > 0 && !configurationService.getValue<boolean>('veritty.editor.alwaysNewWindow')) {
++				group = auxParts[auxParts.length - 1].activeGroup;
++			} else {
++				group = editorGroupService.createAuxiliaryEditorPart().then(auxPart => auxPart.activeGroup);
++			}
++		}
++	}
++
+ 	return group;
+ }
+ 

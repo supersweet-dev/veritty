@@ -41,23 +41,34 @@ gantt
 
 ---
 
-### Phase 0: Architecture & IPC Protocol Specification (Current)
+### Phase 0: Architecture & IPC Protocol Specification (Completed)
 - [x] Repository initialization & open-source governance (MIT).
 - [x] Project manifesto & architecture overview ([`README.md`](file:///root/projects/veritty/README.md)).
-- [ ] Detailed IPC Protocol Specification ([`docs/architecture/ipc-protocol.md`](file:///root/projects/veritty/docs/architecture/ipc-protocol.md)).
-- [ ] Workbench Inversion Specification ([`docs/architecture/workbench-inversion.md`](file:///root/projects/veritty/docs/architecture/workbench-inversion.md)).
-- [ ] Dynamic Drawer System Specification ([`docs/architecture/dynamic-drawers.md`](file:///root/projects/veritty/docs/architecture/dynamic-drawers.md)).
+- [x] Detailed IPC Protocol Specification ([`docs/architecture/ipc-protocol.md`](file:///root/projects/veritty/docs/architecture/ipc-protocol.md)).
+- [x] Workbench Inversion Specification ([`docs/architecture/workbench-inversion.md`](file:///root/projects/veritty/docs/architecture/workbench-inversion.md)).
+- [x] Dynamic Drawer System Specification ([`docs/architecture/dynamic-drawers.md`](file:///root/projects/veritty/docs/architecture/dynamic-drawers.md)).
 
 ---
 
-### Phase 1: Upstream Base & Patch Engine
-- [ ] **Upstream Base Harness**:
-  - Script to pin and shallow-clone upstream Code-OSS or VSCodium source release.
-  - Telemetry scrubbing verification (strip ApplicationInsights, crash reporters, tracking endpoints).
-- [ ] **Patch Management System**:
-  - Automated patch application script (`build/apply-patches.sh`).
-  - Automated patch generation script (`build/generate-patches.sh`) against clean upstream tag.
-- [ ] **CI & Validation**:
+### Phase 1: Upstream Base & Patch Engine (Completed)
+- [x] **Upstream Base Harness**:
+  - Script to pin and shallow-clone upstream Code-OSS or VSCodium source release ([`build/fetch-base.sh`](file:///root/projects/veritty/build/fetch-base.sh)).
+  - Telemetry scrubbing & Open VSX marketplace configuration ([`patches/01-debloat/001-product-and-telemetry.patch`](file:///root/projects/veritty/patches/01-debloat/001-product-and-telemetry.patch)).
+- [x] **Patch Management System**:
+  - Automated patch application script ([`build/apply-patches.sh`](file:///root/projects/veritty/build/apply-patches.sh)).
+  - Automated patch generation script ([`build/generate-patches.sh`](file:///root/projects/veritty/build/generate-patches.sh)) against clean upstream tag.
+- [x] **Validation**:
+  - All modular patches apply cleanly against Code-OSS tag 1.96.4.
+
+---
+
+### Phase 2: Workbench Layout Inversion (In Progress)
+- [x] **Terminal Canvas as Root**:
+  - Layout inverted: `PANEL_HIDDEN: false` by default, `EDITOR_HIDDEN: true` by default in main window ([`patches/02-workbench/001-terminal-root-canvas.patch`](file:///root/projects/veritty/patches/02-workbench/001-terminal-root-canvas.patch)).
+  - Terminal registered as order 0 default panel container.
+- [x] **Auxiliary Window Default Routing**:
+  - Intercepted editor group resolution in `editorGroupFinder.ts` ([`patches/03-auxiliary/001-route-editors-to-aux-windows.patch`](file:///root/projects/veritty/patches/03-auxiliary/001-route-editors-to-aux-windows.patch)).
+  - Routed main window editor requests to `createAuxiliaryEditorPart()` (native OS auxiliary windows).
   - GitHub Actions / build script verifying clean patch application and compilation.
 
 ---
