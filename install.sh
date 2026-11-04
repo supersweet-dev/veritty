@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # VeriTTY Installer and Updater
-# Installs or updates the all-in-one VeriTTY Cockpit application and CLI client
+# Installs or updates the VeriTTY terminal-first VS Code distribution
 
 REPO="supersweet-dev/veritty"
 INSTALL_DIR="${VERITTY_INSTALL_DIR:-$HOME/.local/bin}"
@@ -19,20 +19,20 @@ USAGE:
 
 OPTIONS:
   --check            Check for newer release without install
-  --cli-only         Install only the CLI client
-  --version <tag>    Install specific release tag (example: v1.1.0)
+  --deb              Install native Debian package (.deb) using sudo
+  --version <tag>    Install specific release tag (example: v1.2.0)
   --uninstall        Remove VeriTTY binaries, desktop entry, data, and configs
   --help, -h         Show this message
 
 ENVIRONMENT:
-  VERITTY_INSTALL_DIR   Target directory for binary symlinks (default: ~/.local/bin)
-  VERITTY_DATA_DIR      Target directory for desktop app (default: ~/.local/share/veritty)
+  VERITTY_INSTALL_DIR   Target directory for binary symlink (default: ~/.local/bin)
+  VERITTY_DATA_DIR      Target directory for application (default: ~/.local/share/veritty)
   XDG_CONFIG_HOME       Config directory root (default: ~/.config)
 EOF
 }
 
 CHECK_ONLY=0
-CLI_ONLY=0
+INSTALL_DEB=0
 SPECIFIC_TAG=""
 UNINSTALL=0
 
@@ -42,8 +42,8 @@ while [ $# -gt 0 ]; do
       CHECK_ONLY=1
       shift
       ;;
-    --cli-only)
-      CLI_ONLY=1
+    --deb)
+      INSTALL_DEB=1
       shift
       ;;
     --version)
@@ -70,7 +70,7 @@ done
 if [ "$UNINSTALL" -eq 1 ]; then
   echo "==> Uninstalling VeriTTY..."
   rm -f "${INSTALL_DIR}/veritty"
-  rm -f "${INSTALL_DIR}/veritty-cockpit"
+  rm -f "${INSTALL_DIR}/veritty-cockpit" 2>/dev/null || true
   rm -f "${DESKTOP_DIR}/veritty.desktop"
   rm -rf "$DATA_DIR"
   rm -rf "$CONFIG_DIR"
@@ -132,85 +132,79 @@ else
   echo "==> Installing VeriTTY (${TARGET_TAG})..."
 fi
 
-mkdir -p "$INSTALL_DIR" "$CONFIG_DIR" "$DESKTOP_DIR"
-
-# Select release asset
-ASSET_URL=""
-IS_DESKTOP_BUNDLE=0
-
-if [ "$CLI_ONLY" -eq 0 ]; then
-  # Look for desktop all-in-one bundle
-  DESKTOP_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url": *"[^"]*veritty-linux-x64[^"]*"' | head -n 1 | cut -d '"' -f 4 || true)
-  if [ -n "$DESKTOP_URL" ]; then
-    ASSET_URL="$DESKTOP_URL"
-    IS_DESKTOP_BUNDLE=1
-  fi
-fi
-
-if [ -z "$ASSET_URL" ]; then
-  # Fallback to CLI bundle
-  CLI_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url": *"[^"]*veritty-cli-[^"]*"' | head -n 1 | cut -d '"' -f 4 || true)
-  if [ -z "$CLI_URL" ]; then
-    echo "error: No matching release asset found for ${TARGET_TAG}."
-    exit 1
-  fi
-  ASSET_URL="$CLI_URL"
-  IS_DESKTOP_BUNDLE=0
-fi
-
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 
+# Debian package installation option
+if [ "$INSTALL_DEB" -eq 1 ] && command -v dpkg >/dev/null 2>&1; then
+  DEB_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url": *"[^"]*veritty_[^"]*\.deb"' | head -n 1 | cut -d '"' -f 4 || true)
+  if [ -n "$DEB_URL" ]; then
+    echo "--> Downloading Debian package ${DEB_URL}..."
+    curl -fsSL "$DEB_URL" -o "${TMP_DIR}/veritty.deb"
+    echo "--> Installing package with apt/dpkg..."
+    if [ "$(id -u)" = "0" ]; then
+      apt-get install -y "${TMP_DIR}/veritty.deb" || dpkg -i "${TMP_DIR}/veritty.deb"
+    elif command -v sudo >/dev/null 2>&1; then
+      sudo apt-get install -y "${TMP_DIR}/veritty.deb" || sudo dpkg -i "${TMP_DIR}/veritty.deb"
+    else
+      echo "error: Root or sudo access required to install .deb package."
+      exit 1
+    fi
+    echo "==> VeriTTY ${TARGET_TAG} installed."
+    exit 0
+  fi
+fi
+
+# Standalone tarball installation
+mkdir -p "$INSTALL_DIR" "$CONFIG_DIR" "$DESKTOP_DIR"
+
+ASSET_URL=""
 if [ -n "${VERITTY_ARCHIVE_FILE:-}" ] && [ -f "${VERITTY_ARCHIVE_FILE}" ]; then
   echo "--> Using local archive file: ${VERITTY_ARCHIVE_FILE}..."
   cp "${VERITTY_ARCHIVE_FILE}" "${TMP_DIR}/archive.tar.gz"
-  if [[ "${VERITTY_ARCHIVE_FILE}" == *"veritty-linux-x64"* ]]; then
-    IS_DESKTOP_BUNDLE=1
-  fi
 else
+  TAR_URL=$(echo "$RELEASE_JSON" | grep -o '"browser_download_url": *"[^"]*veritty-linux-x64[^"]*"' | head -n 1 | cut -d '"' -f 4 || true)
+  if [ -z "$TAR_URL" ]; then
+    echo "error: No application archive found for ${TARGET_TAG}."
+    exit 1
+  fi
+  ASSET_URL="$TAR_URL"
   echo "--> Downloading ${ASSET_URL}..."
   curl -fsSL "$ASSET_URL" -o "${TMP_DIR}/archive.tar.gz"
 fi
 
-if [ "$IS_DESKTOP_BUNDLE" -eq 1 ]; then
-  echo "--> Installing VeriTTY Cockpit to ${DATA_DIR}..."
-  rm -rf "$DATA_DIR"
-  mkdir -p "$DATA_DIR"
-  tar -xzf "${TMP_DIR}/archive.tar.gz" -C "$DATA_DIR" --strip-components=1
+echo "--> Installing VeriTTY to ${DATA_DIR}..."
+rm -rf "$DATA_DIR"
+mkdir -p "$DATA_DIR"
+tar -xzf "${TMP_DIR}/archive.tar.gz" -C "$DATA_DIR" --strip-components=1
 
-  # Link binaries
-  if [ -f "${DATA_DIR}/bin/veritty" ]; then
-    ln -sf "${DATA_DIR}/bin/veritty" "${INSTALL_DIR}/veritty"
-  elif [ -f "${DATA_DIR}/veritty" ]; then
-    ln -sf "${DATA_DIR}/veritty" "${INSTALL_DIR}/veritty"
+# Link unified binary
+ln -sf "${DATA_DIR}/bin/veritty" "${INSTALL_DIR}/veritty"
+rm -f "${INSTALL_DIR}/veritty-cockpit" 2>/dev/null || true
+
+# Install desktop entry
+if [ -f "${DATA_DIR}/share/applications/veritty.desktop" ]; then
+  cp "${DATA_DIR}/share/applications/veritty.desktop" "${DESKTOP_DIR}/veritty.desktop"
+  sed -i "s|Exec=.*|Exec=${INSTALL_DIR}/veritty %F|" "${DESKTOP_DIR}/veritty.desktop" || true
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
   fi
+fi
 
-  if [ -f "${DATA_DIR}/bin/veritty-cockpit" ]; then
-    ln -sf "${DATA_DIR}/bin/veritty-cockpit" "${INSTALL_DIR}/veritty-cockpit"
-  elif [ -f "${DATA_DIR}/veritty" ]; then
-    ln -sf "${DATA_DIR}/veritty" "${INSTALL_DIR}/veritty-cockpit"
-  fi
-
-  # Install desktop entry
-  if [ -f "${DATA_DIR}/share/applications/veritty.desktop" ]; then
-    cp "${DATA_DIR}/share/applications/veritty.desktop" "${DESKTOP_DIR}/veritty.desktop"
-    # Ensure Exec points to binary
-    sed -i "s|Exec=.*|Exec=${INSTALL_DIR}/veritty-cockpit %F|" "${DESKTOP_DIR}/veritty.desktop" || true
-    if command -v update-desktop-database >/dev/null 2>&1; then
-      update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+# Install AppArmor profile if system supports it and permissions allow
+APPARMOR_SRC="${DATA_DIR}/share/apparmor/veritty"
+if [ -d /etc/apparmor.d ] && [ -f "$APPARMOR_SRC" ]; then
+  if [ "$(id -u)" = "0" ]; then
+    cp "$APPARMOR_SRC" /etc/apparmor.d/veritty
+    if command -v apparmor_parser >/dev/null 2>&1; then
+      apparmor_parser -r /etc/apparmor.d/veritty 2>/dev/null || true
+    fi
+  elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+    sudo cp "$APPARMOR_SRC" /etc/apparmor.d/veritty 2>/dev/null || true
+    if command -v apparmor_parser >/dev/null 2>&1; then
+      sudo apparmor_parser -r /etc/apparmor.d/veritty 2>/dev/null || true
     fi
   fi
-
-  # Shell integration directory
-  SHELL_DIR="${DATA_DIR}/shell"
-else
-  echo "--> Installing VeriTTY CLI to ${CONFIG_DIR}/cli..."
-  rm -rf "${CONFIG_DIR}/cli"
-  mkdir -p "${CONFIG_DIR}/cli"
-  tar -xzf "${TMP_DIR}/archive.tar.gz" -C "${CONFIG_DIR}/cli" --strip-components=1
-
-  ln -sf "${CONFIG_DIR}/cli/bin/veritty" "${INSTALL_DIR}/veritty"
-  SHELL_DIR="${CONFIG_DIR}/cli/shell"
 fi
 
 # Persist installer script for self-updating commands
@@ -222,12 +216,10 @@ else
 fi
 chmod +x "${CONFIG_DIR}/install.sh" 2>/dev/null || true
 
+SHELL_DIR="${DATA_DIR}/shell"
+
 echo "==> VeriTTY ${TARGET_TAG} installed."
-echo "Binaries available in ${INSTALL_DIR}:"
-echo "  veritty         (unified launcher and CLI)"
-if [ "$IS_DESKTOP_BUNDLE" -eq 1 ]; then
-  echo "  veritty-cockpit (graphical desktop cockpit)"
-fi
+echo "Binary available at: ${INSTALL_DIR}/veritty"
 
 if [ -z "$CURRENT_VERSION" ]; then
   echo ""
@@ -245,4 +237,4 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo "Note: Add ${INSTALL_DIR} to your PATH."
 fi
 
-echo "==> Done. Launch with 'veritty' or 'veritty-cockpit'."
+echo "==> Done. Launch with 'veritty'."

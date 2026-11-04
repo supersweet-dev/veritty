@@ -3,24 +3,20 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-function findCockpitBinary(): string | undefined {
-  if (process.env.VERITTY_COCKPIT_BIN && fs.existsSync(process.env.VERITTY_COCKPIT_BIN)) {
-    return process.env.VERITTY_COCKPIT_BIN;
+function findAppBinary(): string | undefined {
+  if (process.env.VERITTY_APP_BIN && fs.existsSync(process.env.VERITTY_APP_BIN)) {
+    return process.env.VERITTY_APP_BIN;
   }
 
-  // Check sibling paths in packaged bundle layout
   const candidatePaths = [
     // Next to app bundle root
     path.resolve(__dirname, '..', '..', 'veritty'),
-    path.resolve(__dirname, '..', '..', 'bin', 'veritty-cockpit'),
     path.resolve(__dirname, '..', '..', '..', 'veritty'),
     // User local share path
     path.join(os.homedir(), '.local', 'share', 'veritty', 'veritty'),
-    path.join(os.homedir(), '.local', 'share', 'veritty', 'bin', 'veritty-cockpit'),
     // System path
     '/usr/share/veritty/veritty',
-    '/usr/local/bin/veritty-cockpit',
-    '/usr/bin/veritty-cockpit',
+    '/usr/bin/veritty',
   ];
 
   for (const candidate of candidatePaths) {
@@ -32,13 +28,13 @@ function findCockpitBinary(): string | undefined {
   return undefined;
 }
 
-export async function handleCockpit(args: string[] = []): Promise<void> {
-  const binary = findCockpitBinary();
+export async function handleLaunch(args: string[] = []): Promise<void> {
+  const binary = findAppBinary();
 
   if (!binary) {
     throw new Error(
-      'VeriTTY Cockpit binary not found.\n' +
-      'Install the desktop bundle with:\n' +
+      'VeriTTY application binary not found.\n' +
+      'Install VeriTTY with:\n' +
       '  curl -fsSL https://raw.githubusercontent.com/supersweet-dev/veritty/main/install.sh | bash'
     );
   }
@@ -59,5 +55,5 @@ export async function handleCockpit(args: string[] = []): Promise<void> {
   });
 
   child.unref();
-  console.log(`VeriTTY Cockpit started: ${binary}`);
+  console.log(`VeriTTY started: ${binary}`);
 }

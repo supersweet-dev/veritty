@@ -7,12 +7,12 @@ This document outlines the milestones and implementation phases for VeriTTY.
 ## Target State
 
 VeriTTY configures a terminal-first workspace:
-1. **Primary Window**: A terminal multiplexer (`xterm.js` and PTY) occupies the main window.
+1. **Primary Window**: A terminal multiplexer (`xterm.js` and PTY) occupies the root canvas of the main window.
 2. **Auxiliary Windows**: File edits, diffs, and previews open in detached native OS windows (`BrowserWindow` through `IAuxiliaryWindowService`).
 3. **Dynamic Drawers**: File trees, git views, and diagnostics slide in as overlays and dismiss when input returns to the shell.
-4. **Shell IPC**: A CLI client (`veritty`) controls windows and drawers through a local domain socket.
+4. **Shell IPC**: A unified binary (`veritty`) controls windows and drawers through a local domain socket.
 5. **Debloated Core**: Zero telemetry, no proprietary services, and minimal background memory overhead.
-6. **All-in-One Distribution**: A complete standalone desktop Cockpit application bundled with the CLI, companion extension, and shell integrations.
+6. **Native Packaging & AppArmor**: Native Debian `.deb` packages and standalone `.tar.gz` archives with an integrated AppArmor profile for modern Linux sandboxing.
 
 ---
 
@@ -24,8 +24,8 @@ VeriTTY configures a terminal-first workspace:
 | 1 | Upstream Base Harness & Patch Management | Completed |
 | 2 | Workbench Inversion & Auxiliary Window Routing | Completed |
 | 3 | Dynamic Drawer Overlays | Completed |
-| 4 | CLI Client & Shell Hooks | Completed |
-| 5 | All-in-One Desktop Cockpit & Packaging | Completed |
+| 4 | Unified Binary & Shell Integration | Completed |
+| 5 | Packaging, AppArmor & Distribution | Completed |
 
 ---
 
@@ -63,19 +63,21 @@ VeriTTY configures a terminal-first workspace:
 
 ---
 
-### Phase 4: CLI Client & Shell Integration (Completed)
+### Phase 4: Unified Binary & Shell Integration (Completed)
 - [x] Domain socket IPC client and parser in [`cli/`](file:///root/projects/veritty/cli).
-- [x] Companion IPC server bridge in [`extensions/veritty/`](file:///root/projects/veritty/extensions/veritty).
+- [x] Background IPC server bridge in [`extensions/veritty/`](file:///root/projects/veritty/extensions/veritty).
 - [x] Shell hooks for bash and zsh ([`shell/veritty.sh`](file:///root/projects/veritty/shell/veritty.sh)) and fish ([`shell/veritty.fish`](file:///root/projects/veritty/shell/veritty.fish)).
 - [x] OSC 7 working directory sync functions and CLI aliases (`v`, `vdiff`, `vdrawer`, `vscratch`).
 - [x] End-to-end socket integration test suite passing.
 
 ---
 
-### Phase 5: All-in-One Desktop Cockpit & Packaging (Completed)
-- [x] Standalone Cockpit desktop packager in [`build/package-desktop.sh`](file:///root/projects/veritty/build/package-desktop.sh).
-- [x] Electron runtime integration and production dependency filtering.
-- [x] Unified launcher binary (`bin/veritty`) supporting direct Cockpit launch and IPC commands.
-- [x] Graphical Cockpit launcher (`bin/veritty-cockpit`) and desktop file (`share/applications/veritty.desktop`).
-- [x] Self-updating installer in [`install.sh`](file:///root/projects/veritty/install.sh) deploying all-in-one desktop Cockpit.
-- [x] GitHub Actions automated release pipeline publishing standalone Linux Cockpit packages.
+### Phase 5: Packaging, AppArmor & Distribution (Completed)
+- [x] Standalone Linux application packager in [`build/package-desktop.sh`](file:///root/projects/veritty/build/package-desktop.sh).
+- [x] Native Debian package generation (`.deb`) via `dpkg-deb`.
+- [x] AppArmor profile in [`resources/apparmor/veritty`](file:///root/projects/veritty/resources/apparmor/veritty) for Ubuntu 24.04 and Debian unprivileged user namespaces.
+- [x] Fallback sandbox detection in [`bin/veritty`](file:///root/projects/veritty/bin/veritty).
+- [x] Unified binary launcher (`bin/veritty`) handling direct application start and file opening.
+- [x] FreeDesktop application entry in [`share/applications/veritty.desktop`](file:///root/projects/veritty/share/applications/veritty.desktop).
+- [x] Self-updating installer in [`install.sh`](file:///root/projects/veritty/install.sh).
+- [x] GitHub Actions automated release pipeline publishing `.deb` and `.tar.gz` packages.

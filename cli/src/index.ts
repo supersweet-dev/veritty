@@ -4,23 +4,23 @@ import { handleDiff } from './commands/diff.js';
 import { handleDrawer } from './commands/drawer.js';
 import { handleScratch } from './commands/scratch.js';
 import { handleUpdate } from './commands/update.js';
-import { handleCockpit } from './commands/cockpit.js';
+import { handleLaunch } from './commands/launch.js';
 
 function printHelp(): void {
   console.log(`
-VeriTTY CLI - Terminal-first IDE IPC client
+VeriTTY - Terminal-first Code-OSS distribution
 
 USAGE:
   veritty [command] [options] [arguments]
+  veritty [directory]
   veritty <file>[:line[:col]]...
 
 COMMANDS:
-  cockpit [path]                 Launch the graphical VeriTTY Cockpit application
   open <file>[:line[:col]]...    Open file(s) in detached native OS auxiliary window(s)
                                    --reuse     Reuse an existing auxiliary window
                                    --preview   Open in preview mode
   diff <fileA> <fileB> [title]   Open a detached diff view comparing two files
-  drawer <action> <drawer>       Control dynamic drawers in VeriTTY Cockpit
+  drawer <action> <drawer>       Control dynamic drawers in VeriTTY
                                    Actions: toggle | open | close | peek
                                    Drawers: explorer | git | search | diagnostics
   scratch [--lang=<lang>]        Read stdin and open in a detached scratchpad editor
@@ -30,7 +30,7 @@ COMMANDS:
 
 EXAMPLES:
   veritty
-  veritty cockpit .
+  veritty .
   veritty src/main.rs:12:4
   veritty open --reuse README.md
   veritty diff package.json package.json.bak "Package Diff"
@@ -50,7 +50,7 @@ async function main(): Promise<void> {
 
   if (args.length === 0) {
     try {
-      await handleCockpit(['.']);
+      await handleLaunch(['.']);
       return;
     } catch {
       printHelp();

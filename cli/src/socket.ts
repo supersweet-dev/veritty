@@ -88,7 +88,7 @@ export async function sendRpcRequest<T = unknown>(
       if (err.code === 'ENOENT' || err.code === 'ECONNREFUSED') {
         reject(
           new Error(
-            `Unable to connect to VeriTTY Cockpit at ${socketPath}.\n` +
+            `Unable to connect to VeriTTY at ${socketPath}.\n` +
             `Ensure VeriTTY is running, or check $XDG_RUNTIME_DIR.`
           )
         );

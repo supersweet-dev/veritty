@@ -1,0 +1,19 @@
+# This profile allows VeriTTY to use unprivileged user namespaces
+# required by the Electron / Chromium sandbox on modern Linux systems.
+
+abi <abi/5.0>,
+include <tunables/global>
+
+profile veritty /usr/share/veritty{/bin,}/veritty flags=(unconfined) {
+  userns,
+  @{exec_path} mr,
+
+  include if exists <local/veritty>
+}
+
+profile veritty-user @{HOME}/.local/share/veritty{/bin,}/veritty flags=(unconfined) {
+  userns,
+  @{exec_path} mr,
+
+  include if exists <local/veritty>
+}

@@ -46,7 +46,7 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Release tag: ${TAG_NAME}"
 
-      - name: Build Standalone VeriTTY Cockpit Desktop Package
+      - name: Build VeriTTY Application Packages (.tar.gz and .deb)
         env:
           NODE_OPTIONS: "--max-old-space-size=5120"
         run: |

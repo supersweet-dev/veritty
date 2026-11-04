@@ -1,12 +1,13 @@
 <p align="center">
   <h1 align="center">VeriTTY</h1>
-  <p align="center">A terminal-first Code-OSS fork for tiling window managers and multi-monitor setups.</p>
+  <p align="center">A terminal-first VS Code distribution for tiling window managers and multi-monitor setups.</p>
   <p align="center">
-    <a href="#what-is-veritty">What is VeriTTY</a> |
+    <a href="#overview">Overview</a> |
     <a href="#design">Design</a> |
     <a href="#architecture">Architecture</a> |
     <a href="#installation">Installation</a> |
-    <a href="#shell-ipc">Shell IPC</a> |
+    <a href="#usage">Usage</a> |
+    <a href="#apparmor">AppArmor</a> |
     <a href="#build-from-source">Build</a> |
     <a href="#license">License</a>
   </p>
@@ -14,14 +15,15 @@
 
 ---
 
-## What is VeriTTY?
+## Overview
 
-VeriTTY is an all-in-one graphical developer cockpit:
+VeriTTY is a terminal-first distribution of Code-OSS (VS Code):
 
-* **VeriTTY Cockpit**: The desktop application. The root canvas is a terminal multiplexer powered by local pseudoterminals. File editors, diffs, and previews open as detached native OS windows that your window manager arranges.
-* **The Unified CLI (`veritty`)**: A command-line client for your shell. Run `veritty` to launch the Cockpit, or use `veritty open <file>` to route files from existing terminal sessions into detached editor windows.
-* **The IPC Companion**: A built-in extension packaged inside the Cockpit that manages the local domain socket server.
-* **The Patches**: Clean source modifications to Code-OSS that remove telemetry, invert the workbench, redirect editors to auxiliary windows, and convert toolbars into dynamic overlay drawers.
+* **Terminal as Canvas**: The main window is a full-screen terminal multiplexer powered by local pseudoterminals.
+* **Detached Native Windows**: File editors, diff views, and previews open as native OS windows for your window manager (i3, Sway, Hyprland, bspwm) to place and tile.
+* **Dynamic Overlay Drawers**: File trees, git panels, and diagnostics slide over the terminal as overlays and dismiss when you resume typing in the shell.
+* **Zero Telemetry**: All telemetry, crash reporters, and experiment services are stripped. Extension queries point to Open VSX.
+* **Sandbox Support**: Includes an AppArmor profile configured for modern Ubuntu 24.04 and Debian unprivileged user namespaces.
 
 ---
 
@@ -37,7 +39,7 @@ VeriTTY assigns the main window to the terminal multiplexer. File editors, diff 
 
 ```
                                  ┌──────────────────────────────────────────┐
-                                 │       VeriTTY Cockpit (Main Window)      │
+                                 │         VeriTTY (Main Window)            │
                                  │                                          │
                                  │  ┌────────────────────────────────────┐  │
  ┌──────────────────────┐        │  │                                    │  │
@@ -60,39 +62,60 @@ VeriTTY assigns the main window to the terminal multiplexer. File editors, diff 
 
 ---
 
-## Features
-
-### Terminal Grid as Primary Canvas
-The main window renders a terminal grid powered by `xterm.js` and local pseudoterminals. It supports splits, tabs, and OSC escape sequences. Input goes to the shell prompt without passing through editor focus layers.
-
-### Detached Auxiliary Windows for Files
-Opening a file or jumping to a definition launches a native OS auxiliary window.
-* Tile editor windows with i3, Sway, Hyprland, bspwm, or macOS managers.
-* Keep the terminal on one monitor and place editor windows on another.
-
-### Dynamic Overlay Drawers
-File trees, git panels, and diagnostics render as sliding overlays rather than fixed columns.
-* Hotkeys (`Ctrl+B`, `Ctrl+Shift+G`) open file navigation or staged changes.
-* Escape or new keystrokes in the terminal dismiss the drawer. The terminal retains its column count without resize interruptions.
-
-### Telemetry Removal
-The build removes Microsoft Application Insights, crash report uploads, and experiment services. Extension queries route to Open VSX by default.
-
----
-
 ## Installation
 
-Install the complete VeriTTY Cockpit application, CLI client, desktop launcher, and shell integrations:
+### Option 1: Debian / Ubuntu Package (.deb)
+
+Download and install the native package:
+
+```bash
+# Download from latest release
+curl -fsSLO https://github.com/supersweet-dev/veritty/releases/latest/download/veritty_amd64.deb
+
+# Install package and AppArmor profile
+sudo apt install ./veritty_amd64.deb
+```
+
+### Option 2: Automated User Installer
+
+Install VeriTTY into `~/.local/share/veritty/` and create `~/.local/bin/veritty`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/supersweet-dev/veritty/main/install.sh | bash
 ```
 
-The installer places the Cockpit in `~/.local/share/veritty/`, creates `~/.local/bin/veritty` and `~/.local/bin/veritty-cockpit`, and registers `veritty.desktop` with your desktop application menu.
+### Option 3: Portable Linux Tarball
+
+Download `veritty-linux-x64.tar.gz` from [Releases](https://github.com/supersweet-dev/veritty/releases), extract the archive, and run `bin/veritty`.
+
+---
+
+## Usage
+
+```bash
+# Launch VeriTTY
+veritty
+
+# Open a workspace folder
+veritty /path/to/project
+
+# Open a file in a detached window
+veritty open src/index.ts:42:10
+
+# Open a diff view between two files
+veritty diff old.py new.py
+
+# Toggle dynamic drawers
+veritty drawer toggle explorer
+veritty drawer peek diagnostics
+
+# Pipe stdin into a detached scratch buffer
+cat build.log | veritty scratch
+```
 
 ### Shell Integration
 
-Add directory synchronization and aliases to your shell startup file:
+Add directory synchronization and aliases to your shell configuration:
 
 ```bash
 # Bash (~/.bashrc) or Zsh (~/.zshrc)
@@ -102,38 +125,15 @@ source ~/.local/share/veritty/shell/veritty.sh
 source ~/.local/share/veritty/shell/veritty.fish
 ```
 
-### Updates
-
-Check for newer releases or upgrade your installation:
-
-```bash
-veritty update --check
-veritty update
-```
-
 ---
 
-## Shell IPC
+## AppArmor
 
-Control the running Cockpit instance over the domain socket:
+Modern Linux distributions (Ubuntu 24.04 and Debian 12+) restrict unprivileged user namespaces by default. Without an AppArmor profile, Electron applications fail to create sandbox helper processes.
 
-```bash
-# Launch the desktop Cockpit
-veritty cockpit .
-
-# Open a file at a specific line in a detached window
-veritty open src/index.ts:42:10
-
-# Open a diff between two files
-veritty diff old.py new.py
-
-# Toggle or inspect dynamic drawers
-veritty drawer toggle git
-veritty drawer peek diagnostics
-
-# Pipe standard input into a temporary buffer
-cat build.log | veritty scratch
-```
+VeriTTY includes an AppArmor profile in `resources/apparmor/veritty`.
+* Installing the `.deb` package registers the profile in `/etc/apparmor.d/veritty` during install.
+* The application launcher detects whether AppArmor restricts user namespaces and falls back to unprivileged execution if the profile is not yet loaded.
 
 ---
 
@@ -145,16 +145,18 @@ cat build.log | veritty scratch
 * Git, C/C++ compiler, Python 3
 * Native libraries: `libkrb5-dev`, `libsecret-1-dev`, `libx11-dev`, `libxkbfile-dev`
 
-### Package Standalone Cockpit Bundle
+### Package Standalone Distribution
 ```bash
 git clone https://github.com/supersweet-dev/veritty.git
 cd veritty
 
-# Run the desktop packager
-./build/package-desktop.sh v1.1.0
+# Build .deb package and .tar.gz archive
+./build/package-desktop.sh v1.2.0
 ```
 
-The output tarball appears in `dist-assets/veritty-linux-x64-v1.1.0.tar.gz`.
+Built artifacts appear in `dist-assets/`:
+* `veritty_1.2.0_amd64.deb`
+* `veritty-linux-x64-v1.2.0.tar.gz`
 
 ---
 

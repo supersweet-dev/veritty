@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# VeriTTY Cockpit Desktop Packaging Script
-# Packages the standalone Linux application bundle (Electron, Cockpit runtime, extensions, CLI)
+# VeriTTY Desktop Application Packager
+# Packages the standalone Linux application bundle (tar.gz) and native Debian package (.deb)
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 UPSTREAM_DIR="${ROOT_DIR}/build/upstream"
@@ -10,10 +10,10 @@ DIST_DIR="${ROOT_DIR}/dist"
 STAGE_DIR="${DIST_DIR}/veritty-linux-x64"
 ASSETS_DIR="${ROOT_DIR}/dist-assets"
 
-VERSION="${1:-v1.1.0}"
+VERSION="${1:-v1.2.0}"
 CLEAN_VERSION="${VERSION#v}"
 
-echo "==> Packaging VeriTTY Desktop Application (${VERSION})..."
+echo "==> Packaging VeriTTY (${VERSION})..."
 
 # 1. Build CLI client
 echo "--> Compiling CLI client..."
@@ -68,6 +68,7 @@ mkdir -p "${STAGE_DIR}/bin" \
          "${STAGE_DIR}/resources/app" \
          "${STAGE_DIR}/share/applications" \
          "${STAGE_DIR}/share/pixmaps" \
+         "${STAGE_DIR}/share/apparmor" \
          "${STAGE_DIR}/shell"
 
 # Copy Electron runtime files
@@ -106,7 +107,7 @@ mkdir -p "${STAGE_DIR}/resources/app/cli"
 cp "${ROOT_DIR}/cli/package.json" "${STAGE_DIR}/resources/app/cli/"
 cp -r "${ROOT_DIR}/cli/dist" "${STAGE_DIR}/resources/app/cli/"
 
-# Install Executable Launchers in bin/
+# Install Unified Executable Launcher in bin/veritty
 cat << 'EOF' > "${STAGE_DIR}/bin/veritty"
 #!/usr/bin/env bash
 TARGET="${BASH_SOURCE[0]:-$0}"
@@ -117,42 +118,33 @@ while [ -h "$TARGET" ]; do
 done
 BUNDLE_DIR="$(cd -P "$(dirname "$TARGET")/.." && pwd)"
 
-# Launch Cockpit GUI when invoked with no arguments or cockpit command
+# Resolve sandbox arguments for modern Linux (Ubuntu 24.04 AppArmor restrictions)
+SANDBOX_ARGS=()
+if [ "$(id -u)" = "0" ]; then
+  SANDBOX_ARGS+=("--no-sandbox")
+elif [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ] && [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = "1" ]; then
+  # Check if an active AppArmor profile allows userns for veritty
+  if ! command -v aa-status >/dev/null 2>&1 || ! aa-status 2>/dev/null | grep -q "veritty"; then
+    SANDBOX_ARGS+=("--no-sandbox")
+  fi
+fi
+
+# Launch VeriTTY when invoked with no arguments or with a directory target
 if [ $# -eq 0 ]; then
-  exec "${BUNDLE_DIR}/bin/veritty-cockpit" "."
-elif [ "$1" = "cockpit" ]; then
-  shift
-  exec "${BUNDLE_DIR}/bin/veritty-cockpit" "$@"
+  exec "${BUNDLE_DIR}/veritty" "${SANDBOX_ARGS[@]}" "${BUNDLE_DIR}/resources/app" "."
+elif [ $# -eq 1 ] && [ -d "$1" ]; then
+  exec "${BUNDLE_DIR}/veritty" "${SANDBOX_ARGS[@]}" "${BUNDLE_DIR}/resources/app" "$1"
 fi
 
 # Route IPC commands through the CLI client
 CLI_SCRIPT="${BUNDLE_DIR}/resources/app/cli/dist/index.js"
 if [ -f "$CLI_SCRIPT" ] && command -v node >/dev/null 2>&1; then
-  VERITTY_COCKPIT_BIN="${BUNDLE_DIR}/bin/veritty-cockpit" exec node "$CLI_SCRIPT" "$@"
+  VERITTY_APP_BIN="${BUNDLE_DIR}/veritty" exec node "$CLI_SCRIPT" "$@"
 else
-  ELECTRON_RUN_AS_NODE=1 VERITTY_COCKPIT_BIN="${BUNDLE_DIR}/bin/veritty-cockpit" exec "${BUNDLE_DIR}/veritty" "${BUNDLE_DIR}/resources/app/cli/dist/index.js" "$@"
+  ELECTRON_RUN_AS_NODE=1 VERITTY_APP_BIN="${BUNDLE_DIR}/veritty" exec "${BUNDLE_DIR}/veritty" "${CLI_SCRIPT}" "$@"
 fi
 EOF
 chmod +x "${STAGE_DIR}/bin/veritty"
-
-cat << 'EOF' > "${STAGE_DIR}/bin/veritty-cockpit"
-#!/usr/bin/env bash
-TARGET="${BASH_SOURCE[0]:-$0}"
-while [ -h "$TARGET" ]; do
-  DIR="$(cd -P "$(dirname "$TARGET")" && pwd)"
-  TARGET="$(readlink "$TARGET")"
-  [[ $TARGET != /* ]] && TARGET="$DIR/$TARGET"
-done
-BUNDLE_DIR="$(cd -P "$(dirname "$TARGET")/.." && pwd)"
-
-ARGS=()
-if [ "$(id -u)" = "0" ]; then
-  ARGS+=("--no-sandbox")
-fi
-
-exec "${BUNDLE_DIR}/veritty" "${ARGS[@]}" "${BUNDLE_DIR}/resources/app" "$@"
-EOF
-chmod +x "${STAGE_DIR}/bin/veritty-cockpit"
 
 # Copy Shell Integrations
 cp -r "${ROOT_DIR}/shell"/* "${STAGE_DIR}/shell/"
@@ -162,9 +154,9 @@ cp "${UPSTREAM_DIR}/resources/linux/code.png" "${STAGE_DIR}/share/pixmaps/veritt
 cat << 'EOF' > "${STAGE_DIR}/share/applications/veritty.desktop"
 [Desktop Entry]
 Name=VeriTTY
-Comment=Terminal-first Inverted Cockpit
-GenericName=Cockpit IDE
-Exec=veritty-cockpit %F
+Comment=Terminal-first VS Code distribution
+GenericName=Code Editor
+Exec=veritty %F
 Icon=veritty
 Type=Application
 StartupNotify=false
@@ -175,16 +167,97 @@ Actions=new-window;
 
 [Desktop Action new-window]
 Name=New Window
-Exec=veritty-cockpit --new-window %F
+Exec=veritty --new-window %F
 Icon=veritty
 EOF
 
-# 6. Create Tarball Archive
+# Copy AppArmor profile template
+cp "${ROOT_DIR}/resources/apparmor/veritty" "${STAGE_DIR}/share/apparmor/veritty"
+
 mkdir -p "$ASSETS_DIR"
+
+# 6. Create Tarball Archive
 TARBALL_NAME="veritty-linux-x64-${VERSION}.tar.gz"
 echo "--> Creating ${ASSETS_DIR}/${TARBALL_NAME}..."
 (cd "$DIST_DIR" && tar -czf "${ASSETS_DIR}/${TARBALL_NAME}" "veritty-linux-x64")
 (cd "$ASSETS_DIR" && cp "${TARBALL_NAME}" "veritty-linux-x64.tar.gz")
 
-echo "==> Standalone VeriTTY Cockpit Desktop packaging finished."
-ls -lh "${ASSETS_DIR}/${TARBALL_NAME}"
+# 7. Create Native Debian Package (.deb)
+if command -v dpkg-deb >/dev/null 2>&1; then
+  echo "--> Building Debian package (.deb)..."
+  DEB_STAGE="${DIST_DIR}/deb-stage"
+  rm -rf "$DEB_STAGE"
+  mkdir -p "${DEB_STAGE}/DEBIAN" \
+           "${DEB_STAGE}/usr/bin" \
+           "${DEB_STAGE}/usr/share/veritty" \
+           "${DEB_STAGE}/usr/share/applications" \
+           "${DEB_STAGE}/usr/share/pixmaps" \
+           "${DEB_STAGE}/etc/apparmor.d"
+
+  # Copy application files to /usr/share/veritty
+  cp -r "${STAGE_DIR}"/* "${DEB_STAGE}/usr/share/veritty/"
+
+  # Symlink main binary to /usr/bin/veritty
+  ln -sf /usr/share/veritty/bin/veritty "${DEB_STAGE}/usr/bin/veritty"
+
+  # Desktop entry and icon
+  cp "${STAGE_DIR}/share/applications/veritty.desktop" "${DEB_STAGE}/usr/share/applications/veritty.desktop"
+  cp "${STAGE_DIR}/share/pixmaps/veritty.png" "${DEB_STAGE}/usr/share/pixmaps/veritty.png"
+
+  # AppArmor profile in /etc/apparmor.d/veritty
+  cp "${ROOT_DIR}/resources/apparmor/veritty" "${DEB_STAGE}/etc/apparmor.d/veritty"
+
+  # Control file
+  cat << EOF > "${DEB_STAGE}/DEBIAN/control"
+Package: veritty
+Version: ${CLEAN_VERSION}
+Section: devel
+Priority: optional
+Architecture: amd64
+Maintainer: VeriTTY Contributors <support@supersweet.dev>
+Description: Terminal-first VS Code distribution
+ A terminal-first Code-OSS distribution for tiling window managers.
+ The terminal multiplexer occupies the root canvas, file editors open in
+ detached native OS windows, and toolbars function as dynamic overlay drawers.
+EOF
+
+  # Maintainer scripts
+  cat << 'EOF' > "${DEB_STAGE}/DEBIAN/postinst"
+#!/usr/bin/env sh
+set -e
+
+# Reload desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
+
+# Reload AppArmor profile if AppArmor is active
+if [ -f /etc/apparmor.d/veritty ] && command -v apparmor_parser >/dev/null 2>&1; then
+  apparmor_parser -r /etc/apparmor.d/veritty 2>/dev/null || true
+fi
+EOF
+  chmod 755 "${DEB_STAGE}/DEBIAN/postinst"
+
+  cat << 'EOF' > "${DEB_STAGE}/DEBIAN/postrm"
+#!/usr/bin/env sh
+set -e
+
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+  fi
+  if [ -f /etc/apparmor.d/veritty ] && command -v apparmor_parser >/dev/null 2>&1; then
+    apparmor_parser -R /etc/apparmor.d/veritty 2>/dev/null || true
+  fi
+fi
+EOF
+  chmod 755 "${DEB_STAGE}/DEBIAN/postrm"
+
+  DEB_NAME="veritty_${CLEAN_VERSION}_amd64.deb"
+  dpkg-deb --build --root-owner-group "$DEB_STAGE" "${ASSETS_DIR}/${DEB_NAME}"
+  cp "${ASSETS_DIR}/${DEB_NAME}" "${ASSETS_DIR}/veritty_amd64.deb"
+  rm -rf "$DEB_STAGE"
+fi
+
+echo "==> VeriTTY packaging finished."
+ls -lh "${ASSETS_DIR}"/veritty*
