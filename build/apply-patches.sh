@@ -28,3 +28,11 @@ if [ "$PATCH_COUNT" -eq 0 ]; then
 else
   echo "==> Successfully applied ${PATCH_COUNT} patch(es)."
 fi
+
+if [ -d "${ROOT_DIR}/extensions/veritty" ]; then
+  echo "--> Bundling VeriTTY companion extension into ${UPSTREAM_DIR}/extensions/veritty..."
+  mkdir -p "${UPSTREAM_DIR}/extensions/veritty"
+  cp -r "${ROOT_DIR}/extensions/veritty/"* "${UPSTREAM_DIR}/extensions/veritty/"
+  echo "==> Companion extension bundled."
+fi
+

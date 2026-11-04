@@ -84,7 +84,9 @@ gantt
 
 ---
 
-### Phase 5: Distribution & Packaging (Planned)
-- [ ] Linux binaries: AppImage, deb, tarball.
-- [ ] macOS build: universal dmg.
-- [ ] Release automation on merge to `main`.
+### Phase 5: Distribution & Release 1 (Completed)
+- [x] Standalone installer script in [`install.sh`](file:///root/projects/veritty/install.sh).
+- [x] Companion extension auto-bundling into [`build/apply-patches.sh`](file:///root/projects/veritty/build/apply-patches.sh).
+- [x] Automated tarball packaging for CLI, companion extension, and patches.
+- [x] GitHub Actions automated release pipeline on merge to `main`.
+- [x] Release 1.0 tag and asset publishing.

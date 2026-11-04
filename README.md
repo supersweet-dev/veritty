@@ -107,13 +107,31 @@ Track implementation progress in [ROADMAP.md](file:///root/projects/veritty/ROAD
 | 0 | Architecture & IPC Protocol Specification | Completed |
 | 1 | Upstream Base Harness & Patch Management | Completed |
 | 2 | Workbench Inversion & Auxiliary Window Routing | In Progress |
-| 3 | Dynamic Drawer Overlays | In Progress |
+| 3 | Dynamic Drawer Overlays | Completed |
 | 4 | CLI Client & Shell Hooks | Completed |
-| 5 | Packaging | Planned |
+| 5 | Packaging & Release 1 | Completed |
 
 ---
 
-## Build
+## Installation
+
+Install the CLI and shell integration with one command:
+```bash
+curl -fsSL https://raw.githubusercontent.com/supersweet-dev/veritty/main/install.sh | bash
+```
+
+To enable shell aliases and directory reporting, source the integration script in your shell configuration:
+```bash
+# Bash (~/.bashrc) or Zsh (~/.zshrc)
+source ~/.config/veritty/cli/shell/veritty.sh
+
+# Fish (~/.config/fish/config.fish)
+source ~/.config/veritty/cli/shell/veritty.fish
+```
+
+---
+
+## Build from Source
 
 ### Prerequisites
 * Node.js 20 or higher

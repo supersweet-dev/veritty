@@ -43,7 +43,7 @@ async function main(): Promise<void> {
   }
 
   if (args.includes('-v') || args.includes('--version') || args[0] === 'version') {
-    console.log('veritty-cli 0.1.0');
+    console.log('veritty-cli 1.0.0');
     return;
   }
 

@@ -67,7 +67,7 @@ jobs:
           cp -r cli/dist/* "${CLI_STAGE_DIR}/dist/"
           cp -r shell/* "${CLI_STAGE_DIR}/shell/"
           cp LICENSE README.md "${CLI_STAGE_DIR}/"
-          printf '#!/usr/bin/env bash\nSCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"\nexec node "${SCRIPT_DIR}/dist/index.js" "$@"\n' > "${CLI_STAGE_DIR}/bin/veritty"
+          printf '#!/usr/bin/env bash\nTARGET="${BASH_SOURCE[0]}"\nwhile [ -h "$TARGET" ]; do\n  DIR="$(cd -P "$(dirname "$TARGET")" && pwd)"\n  TARGET="$(readlink "$TARGET")"\n  [[ $TARGET != /* ]] && TARGET="$DIR/$TARGET"\ndone\nSCRIPT_DIR="$(cd -P "$(dirname "$TARGET")/.." && pwd)"\nexec node "${SCRIPT_DIR}/dist/index.js" "$@"\n' > "${CLI_STAGE_DIR}/bin/veritty"
           chmod +x "${CLI_STAGE_DIR}/bin/veritty"
           tar -czf "dist-assets/veritty-cli-${TAG}.tar.gz" "$CLI_STAGE_DIR"
 
