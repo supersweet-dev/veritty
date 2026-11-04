@@ -6,6 +6,7 @@ on:
       - main
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -60,11 +61,7 @@ jobs:
           cp -r cli/dist/* "${CLI_STAGE_DIR}/dist/"
           cp -r shell/* "${CLI_STAGE_DIR}/shell/"
           cp LICENSE README.md "${CLI_STAGE_DIR}/"
-          cat << 'EOF' > "${CLI_STAGE_DIR}/bin/veritty"
-#!/usr/bin/env bash
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec node "${SCRIPT_DIR}/dist/index.js" "$@"
-EOF
+          printf '#!/usr/bin/env bash\nSCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"\nexec node "${SCRIPT_DIR}/dist/index.js" "$@"\n' > "${CLI_STAGE_DIR}/bin/veritty"
           chmod +x "${CLI_STAGE_DIR}/bin/veritty"
           tar -czf "dist-assets/veritty-cli-${TAG}.tar.gz" "$CLI_STAGE_DIR"
 
@@ -78,7 +75,6 @@ EOF
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ steps.versioning.outputs.tag_name }}
         run: |
-          # If tag already exists, delete it before re-creating
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
             gh release delete "$TAG_NAME" --yes || true
           fi
