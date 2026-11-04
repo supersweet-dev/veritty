@@ -107,7 +107,7 @@ Track implementation progress in [ROADMAP.md](file:///root/projects/veritty/ROAD
 | 0 | Architecture & IPC Protocol Specification | Completed |
 | 1 | Upstream Base Harness & Patch Management | Completed |
 | 2 | Workbench Inversion & Auxiliary Window Routing | In Progress |
-| 3 | Dynamic Drawer Overlays | Planned |
+| 3 | Dynamic Drawer Overlays | In Progress |
 | 4 | CLI Client & Shell Hooks | Planned |
 | 5 | Packaging | Planned |
 

@@ -68,9 +68,9 @@ gantt
 
 ---
 
-### Phase 3: Dynamic Drawer Overlay System (Planned)
-- [ ] Render `SidebarPart` and `AuxiliaryBarPart` as absolute floating overlays.
-- [ ] Dismiss drawers on terminal keystroke or canvas click.
+### Phase 3: Dynamic Drawer Overlay System (In Progress)
+- [x] Render `SidebarPart` with floating overlay shadows and border isolation in [`patches/04-drawers/001-dynamic-overlay-drawers.patch`](file:///root/projects/veritty/patches/04-drawers/001-dynamic-overlay-drawers.patch).
+- [x] Auto-dismiss sidebar and auxiliary drawers on terminal keystroke input in [`patches/04-drawers/001-dynamic-overlay-drawers.patch`](file:///root/projects/veritty/patches/04-drawers/001-dynamic-overlay-drawers.patch).
 - [ ] Add peek timeouts for diagnostics drawers on build errors.
 
 ---

@@ -1,0 +1,47 @@
+diff --git a/src/vs/workbench/browser/parts/sidebar/media/sidebarpart.css b/src/vs/workbench/browser/parts/sidebar/media/sidebarpart.css
+index 2c94078..aed3cc0 100644
+--- a/src/vs/workbench/browser/parts/sidebar/media/sidebarpart.css
++++ b/src/vs/workbench/browser/parts/sidebar/media/sidebarpart.css
+@@ -8,6 +8,12 @@
+ 	visibility: hidden !important;
+ }
+ 
++/* VeriTTY: Dynamic overlay drawer styling */
++.monaco-workbench .part.sidebar {
++	z-index: 100;
++	box-shadow: 4px 0 16px rgba(0, 0, 0, 0.4);
++}
++
+ .monaco-workbench .part.sidebar .title-actions .actions-container {
+ 	justify-content: flex-end;
+ }
+diff --git a/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts b/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
+index 6c11d5d..df3358e 100644
+--- a/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
++++ b/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
+@@ -76,7 +76,7 @@ import { getWorkspaceForTerminal, preparePathForShell } from '../common/terminal
+ import { IEditorService } from '../../../services/editor/common/editorService.js';
+ import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
+ import { IHistoryService } from '../../../services/history/common/history.js';
+-import { isHorizontal, IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
++import { isHorizontal, IWorkbenchLayoutService, Parts } from '../../../services/layout/browser/layoutService.js';
+ import { IPathService } from '../../../services/path/common/pathService.js';
+ import { IPreferencesService } from '../../../services/preferences/common/preferences.js';
+ import { importAMDNodeModule } from '../../../../amdX.js';
+@@ -870,6 +870,16 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
+ 			this._open();
+ 		}
+ 
++		// VeriTTY: Auto-dismiss visible overlay drawers when typing in terminal
++		this._register(xterm.raw.onKey(() => {
++			if (this._layoutService.isVisible(Parts.SIDEBAR_PART)) {
++				this._layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
++			}
++			if (this._layoutService.isVisible(Parts.AUXILIARYBAR_PART)) {
++				this._layoutService.setPartHidden(true, Parts.AUXILIARYBAR_PART);
++			}
++		}));
++
+ 		return xterm;
+ 	}
+ 
