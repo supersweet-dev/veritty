@@ -4,7 +4,7 @@ set -euo pipefail
 # VeriTTY Patch Generator
 # Generates a git patch from changes in build/upstream against the pinned tag
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 UPSTREAM_DIR="${ROOT_DIR}/build/upstream"
 PATCHES_DIR="${ROOT_DIR}/patches"
 

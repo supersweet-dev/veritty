@@ -214,8 +214,13 @@ else
 fi
 
 # Persist installer script for self-updating commands
-cp "${BASH_SOURCE[0]}" "${CONFIG_DIR}/install.sh"
-chmod +x "${CONFIG_DIR}/install.sh"
+INSTALLER_SRC="${BASH_SOURCE[0]:-}"
+if [ -n "$INSTALLER_SRC" ] && [ -f "$INSTALLER_SRC" ]; then
+  cp "$INSTALLER_SRC" "${CONFIG_DIR}/install.sh"
+else
+  curl -fsSL "https://raw.githubusercontent.com/${REPO}/main/install.sh" -o "${CONFIG_DIR}/install.sh" 2>/dev/null || true
+fi
+chmod +x "${CONFIG_DIR}/install.sh" 2>/dev/null || true
 
 echo "==> VeriTTY ${TARGET_TAG} installed."
 echo "Binaries available in ${INSTALL_DIR}:"

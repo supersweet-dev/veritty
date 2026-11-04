@@ -4,7 +4,7 @@ set -euo pipefail
 # VeriTTY Patch Applicator
 # Applies modular patches from patches/ to build/upstream
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 UPSTREAM_DIR="${ROOT_DIR}/build/upstream"
 PATCHES_DIR="${ROOT_DIR}/patches"
 

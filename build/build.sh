@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # VeriTTY Core Build Script
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 UPSTREAM_DIR="${ROOT_DIR}/build/upstream"
 
 echo "==> VeriTTY: Building CLI..."

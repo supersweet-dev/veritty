@@ -6,7 +6,7 @@ set -euo pipefail
 
 CODE_TAG="${CODE_TAG:-1.96.4}"
 UPSTREAM_REPO="${UPSTREAM_REPO:-https://github.com/microsoft/vscode.git}"
-UPSTREAM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/build/upstream"
+UPSTREAM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)/build/upstream"
 
 echo "==> VeriTTY: Fetching upstream Code-OSS (tag: ${CODE_TAG})..."
 

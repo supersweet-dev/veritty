@@ -4,7 +4,7 @@ set -euo pipefail
 # VeriTTY Cockpit Desktop Packaging Script
 # Packages the standalone Linux application bundle (Electron, Cockpit runtime, extensions, CLI)
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 UPSTREAM_DIR="${ROOT_DIR}/build/upstream"
 DIST_DIR="${ROOT_DIR}/dist"
 STAGE_DIR="${DIST_DIR}/veritty-linux-x64"
@@ -109,7 +109,7 @@ cp -r "${ROOT_DIR}/cli/dist" "${STAGE_DIR}/resources/app/cli/"
 # Install Executable Launchers in bin/
 cat << 'EOF' > "${STAGE_DIR}/bin/veritty"
 #!/usr/bin/env bash
-TARGET="${BASH_SOURCE[0]}"
+TARGET="${BASH_SOURCE[0]:-$0}"
 while [ -h "$TARGET" ]; do
   DIR="$(cd -P "$(dirname "$TARGET")" && pwd)"
   TARGET="$(readlink "$TARGET")"
@@ -137,7 +137,7 @@ chmod +x "${STAGE_DIR}/bin/veritty"
 
 cat << 'EOF' > "${STAGE_DIR}/bin/veritty-cockpit"
 #!/usr/bin/env bash
-TARGET="${BASH_SOURCE[0]}"
+TARGET="${BASH_SOURCE[0]:-$0}"
 while [ -h "$TARGET" ]; do
   DIR="$(cd -P "$(dirname "$TARGET")" && pwd)"
   TARGET="$(readlink "$TARGET")"
