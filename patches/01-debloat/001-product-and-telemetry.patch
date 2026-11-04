@@ -16,7 +16,7 @@ index 8411532..6fedc04 100644
 +	"win32MutexName": "veritty",
  	"licenseName": "MIT",
 -	"licenseUrl": "https://github.com/microsoft/vscode/blob/main/LICENSE.txt",
-+	"licenseUrl": "https://github.com/veritty-org/veritty/blob/main/LICENSE",
++	"licenseUrl": "https://github.com/supersweet-dev/veritty/blob/main/LICENSE",
 +	"extensionsGallery": {
 +		"serviceUrl": "https://open-vsx.org/vscode/gallery",
 +		"itemUrl": "https://open-vsx.org/vscode/item"

@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-cli:
+    name: Test CLI & IPC Engine
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and Build CLI
+        working-directory: cli
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Run CLI Tests
+        working-directory: cli
+        run: npm test
+
+  verify-patches:
+    name: Verify Code-OSS Patches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch pinned Code-OSS base
+        run: ./build/fetch-base.sh
+
+      - name: Verify Patches Apply Cleanly
+        run: ./build/apply-patches.sh

@@ -137,7 +137,7 @@ See [ROADMAP.md](file:///root/projects/veritty/ROADMAP.md) for detailed mileston
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/veritty-org/veritty.git
+git clone https://github.com/supersweet-dev/veritty.git
 cd veritty
 
 # Install CLI dependencies
