@@ -16,7 +16,7 @@ index 2c94078..aed3cc0 100644
  	justify-content: flex-end;
  }
 diff --git a/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts b/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
-index 6c11d5d..df3358e 100644
+index 6c11d5d..f8b4cb6 100644
 --- a/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
 +++ b/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
 @@ -76,7 +76,7 @@ import { getWorkspaceForTerminal, preparePathForShell } from '../common/terminal
@@ -28,7 +28,15 @@ index 6c11d5d..df3358e 100644
  import { IPathService } from '../../../services/path/common/pathService.js';
  import { IPreferencesService } from '../../../services/preferences/common/preferences.js';
  import { importAMDNodeModule } from '../../../../amdX.js';
-@@ -870,6 +870,16 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
+@@ -386,6 +386,7 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
+ 		@ICommandService private readonly _commandService: ICommandService,
+ 		@IAccessibilitySignalService private readonly _accessibilitySignalService: IAccessibilitySignalService,
+ 		@IViewDescriptorService private readonly _viewDescriptorService: IViewDescriptorService,
++		@IWorkbenchLayoutService private readonly _layoutService: IWorkbenchLayoutService,
+ 	) {
+ 		super();
+ 
+@@ -870,6 +871,16 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
  			this._open();
  		}
  

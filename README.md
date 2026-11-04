@@ -2,15 +2,26 @@
   <h1 align="center">VeriTTY</h1>
   <p align="center">A terminal-first Code-OSS fork for tiling window managers and multi-monitor setups.</p>
   <p align="center">
+    <a href="#what-is-veritty">What is VeriTTY</a> |
     <a href="#design">Design</a> |
     <a href="#architecture">Architecture</a> |
-    <a href="#features">Features</a> |
+    <a href="#installation">Installation</a> |
     <a href="#shell-ipc">Shell IPC</a> |
-    <a href="#roadmap">Roadmap</a> |
-    <a href="#build">Build</a> |
+    <a href="#build-from-source">Build</a> |
     <a href="#license">License</a>
   </p>
 </p>
+
+---
+
+## What is VeriTTY?
+
+VeriTTY is an all-in-one graphical developer cockpit:
+
+* **VeriTTY Cockpit**: The desktop application. The root canvas is a terminal multiplexer powered by local pseudoterminals. File editors, diffs, and previews open as detached native OS windows that your window manager arranges.
+* **The Unified CLI (`veritty`)**: A command-line client for your shell. Run `veritty` to launch the Cockpit, or use `veritty open <file>` to route files from existing terminal sessions into detached editor windows.
+* **The IPC Companion**: A built-in extension packaged inside the Cockpit that manages the local domain socket server.
+* **The Patches**: Clean source modifications to Code-OSS that remove telemetry, invert the workbench, redirect editors to auxiliary windows, and convert toolbars into dynamic overlay drawers.
 
 ---
 
@@ -56,10 +67,10 @@ The main window renders a terminal grid powered by `xterm.js` and local pseudote
 
 ### Detached Auxiliary Windows for Files
 Opening a file or jumping to a definition launches a native OS auxiliary window.
-* You can tile editor windows with i3, Sway, Hyprland, or yabai.
-* You can keep the terminal on one monitor and place editor windows on another.
+* Tile editor windows with i3, Sway, Hyprland, bspwm, or macOS managers.
+* Keep the terminal on one monitor and place editor windows on another.
 
-### Overlay Drawers
+### Dynamic Overlay Drawers
 File trees, git panels, and diagnostics render as sliding overlays rather than fixed columns.
 * Hotkeys (`Ctrl+B`, `Ctrl+Shift+G`) open file navigation or staged changes.
 * Escape or new keystrokes in the terminal dismiss the drawer. The terminal retains its column count without resize interruptions.
@@ -69,10 +80,47 @@ The build removes Microsoft Application Insights, crash report uploads, and expe
 
 ---
 
+## Installation
+
+Install the complete VeriTTY Cockpit application, CLI client, desktop launcher, and shell integrations:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/supersweet-dev/veritty/main/install.sh | bash
+```
+
+The installer places the Cockpit in `~/.local/share/veritty/`, creates `~/.local/bin/veritty` and `~/.local/bin/veritty-cockpit`, and registers `veritty.desktop` with your desktop application menu.
+
+### Shell Integration
+
+Add directory synchronization and aliases to your shell startup file:
+
+```bash
+# Bash (~/.bashrc) or Zsh (~/.zshrc)
+source ~/.local/share/veritty/shell/veritty.sh
+
+# Fish (~/.config/fish/config.fish)
+source ~/.local/share/veritty/shell/veritty.fish
+```
+
+### Updates
+
+Check for newer releases or upgrade your installation:
+
+```bash
+veritty update --check
+veritty update
+```
+
+---
+
 ## Shell IPC
 
-A command-line client controls the running instance over a local domain socket:
+Control the running Cockpit instance over the domain socket:
+
 ```bash
+# Launch the desktop Cockpit
+veritty cockpit .
+
 # Open a file at a specific line in a detached window
 veritty open src/index.ts:42:10
 
@@ -89,72 +137,24 @@ cat build.log | veritty scratch
 
 ---
 
-## Codebase Structure
-
-The project maintains modifications to upstream Code-OSS as isolated git patches:
-* Patches sit in `patches/` and apply against pinned release tags.
-* The CLI client lives in `cli/`.
-* Shell integration hooks live in `shell/`.
-
----
-
-## Roadmap
-
-Track implementation progress in [ROADMAP.md](file:///root/projects/veritty/ROADMAP.md).
-
-| Phase | Milestone | Status |
-| :--- | :--- | :--- |
-| 0 | Architecture & IPC Protocol Specification | Completed |
-| 1 | Upstream Base Harness & Patch Management | Completed |
-| 2 | Workbench Inversion & Auxiliary Window Routing | Completed |
-| 3 | Dynamic Drawer Overlays | Completed |
-| 4 | CLI Client & Shell Hooks | Completed |
-| 5 | Packaging & Release 1 | Completed |
-
----
-
-## Installation
-
-Install the CLI and shell integration with one command:
-```bash
-curl -fsSL https://raw.githubusercontent.com/supersweet-dev/veritty/main/install.sh | bash
-```
-
-To enable shell aliases and directory reporting, source the integration script in your shell configuration:
-```bash
-# Bash (~/.bashrc) or Zsh (~/.zshrc)
-source ~/.config/veritty/cli/shell/veritty.sh
-
-# Fish (~/.config/fish/config.fish)
-source ~/.config/veritty/cli/shell/veritty.fish
-```
-
----
-
 ## Build from Source
 
 ### Prerequisites
 * Node.js 20 or higher
 * npm 10 or higher
-* Git
-* C/C++ compiler and Python 3 (for native modules)
+* Git, C/C++ compiler, Python 3
+* Native libraries: `libkrb5-dev`, `libsecret-1-dev`, `libx11-dev`, `libxkbfile-dev`
 
-### Instructions
+### Package Standalone Cockpit Bundle
 ```bash
 git clone https://github.com/supersweet-dev/veritty.git
 cd veritty
 
-# Build the CLI
-cd cli && npm install && npm run build
-cd ..
-
-# Fetch upstream base and apply patches
-./build/fetch-base.sh
-./build/apply-patches.sh
-
-# Compile
-./build/build.sh
+# Run the desktop packager
+./build/package-desktop.sh v1.1.0
 ```
+
+The output tarball appears in `dist-assets/veritty-linux-x64-v1.1.0.tar.gz`.
 
 ---
 

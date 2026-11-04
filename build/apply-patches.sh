@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # VeriTTY Patch Applicator
-# Sequentially applies all modular patches in patches/ to build/upstream
+# Applies modular patches from patches/ to build/upstream
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UPSTREAM_DIR="${ROOT_DIR}/build/upstream"
@@ -18,15 +18,20 @@ echo "==> VeriTTY: Applying patches to ${UPSTREAM_DIR}..."
 
 PATCH_COUNT=0
 for patch_file in $(find "$PATCHES_DIR" -type f -name "*.patch" | sort); do
-  echo "--> Applying patch: $(basename "$patch_file")"
-  git -C "$UPSTREAM_DIR" apply --ignore-whitespace "$patch_file"
+  PATCH_NAME="$(basename "$patch_file")"
+  if git -C "$UPSTREAM_DIR" apply --reverse --check "$patch_file" >/dev/null 2>&1; then
+    echo "--> Patch already present: ${PATCH_NAME}"
+  else
+    echo "--> Applying patch: ${PATCH_NAME}"
+    git -C "$UPSTREAM_DIR" apply --ignore-whitespace "$patch_file"
+  fi
   PATCH_COUNT=$((PATCH_COUNT + 1))
 done
 
 if [ "$PATCH_COUNT" -eq 0 ]; then
-  echo "--> No patch files found in ${PATCHES_DIR} yet."
+  echo "--> No patch files found in ${PATCHES_DIR}."
 else
-  echo "==> Successfully applied ${PATCH_COUNT} patch(es)."
+  echo "==> Processed ${PATCH_COUNT} patch(es)."
 fi
 
 if [ -d "${ROOT_DIR}/extensions/veritty" ]; then
@@ -35,4 +40,3 @@ if [ -d "${ROOT_DIR}/extensions/veritty" ]; then
   cp -r "${ROOT_DIR}/extensions/veritty/"* "${UPSTREAM_DIR}/extensions/veritty/"
   echo "==> Companion extension bundled."
 fi
-

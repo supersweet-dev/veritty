@@ -4,16 +4,18 @@ import { handleDiff } from './commands/diff.js';
 import { handleDrawer } from './commands/drawer.js';
 import { handleScratch } from './commands/scratch.js';
 import { handleUpdate } from './commands/update.js';
+import { handleCockpit } from './commands/cockpit.js';
 
 function printHelp(): void {
   console.log(`
 VeriTTY CLI - Terminal-first IDE IPC client
 
 USAGE:
-  veritty <command> [options] [arguments]
+  veritty [command] [options] [arguments]
   veritty <file>[:line[:col]]...
 
 COMMANDS:
+  cockpit [path]                 Launch the graphical VeriTTY Cockpit application
   open <file>[:line[:col]]...    Open file(s) in detached native OS auxiliary window(s)
                                    --reuse     Reuse an existing auxiliary window
                                    --preview   Open in preview mode
@@ -27,6 +29,8 @@ COMMANDS:
   version, --version, -v         Show version info
 
 EXAMPLES:
+  veritty
+  veritty cockpit .
   veritty src/main.rs:12:4
   veritty open --reuse README.md
   veritty diff package.json package.json.bak "Package Diff"
@@ -39,9 +43,19 @@ EXAMPLES:
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
-  if (args.length === 0 || args.includes('-h') || args.includes('--help') || args[0] === 'help') {
+  if (args.includes('-h') || args.includes('--help') || args[0] === 'help') {
     printHelp();
     return;
+  }
+
+  if (args.length === 0) {
+    try {
+      await handleCockpit(['.']);
+      return;
+    } catch {
+      printHelp();
+      return;
+    }
   }
 
   if (args.includes('-v') || args.includes('--version') || args[0] === 'version') {

@@ -12,32 +12,20 @@ VeriTTY configures a terminal-first workspace:
 3. **Dynamic Drawers**: File trees, git views, and diagnostics slide in as overlays and dismiss when input returns to the shell.
 4. **Shell IPC**: A CLI client (`veritty`) controls windows and drawers through a local domain socket.
 5. **Debloated Core**: Zero telemetry, no proprietary services, and minimal background memory overhead.
+6. **All-in-One Distribution**: A complete standalone desktop Cockpit application bundled with the CLI, companion extension, and shell integrations.
 
 ---
 
 ## Milestones
 
-```mermaid
-gantt
-    title VeriTTY Implementation Phases
-    dateFormat  YYYY-MM-DD
-    section Phase 0: Foundations
-    Architecture & IPC Protocol Specs :active, 2026-11-01, 7d
-    section Phase 1: Upstream & Patches
-    VSCodium/Code-OSS Fetch Harness   :2026-11-08, 7d
-    Patch Management Engine           :2026-11-12, 5d
-    section Phase 2: Workbench Inversion
-    Terminal as Root Canvas           :2026-11-17, 10d
-    Auxiliary Window Default Routing  :2026-11-22, 8d
-    section Phase 3: Dynamic Drawers
-    Overlay Drawer Container          :2026-11-28, 8d
-    Auto-Dismiss & Context Reactive   :2026-12-04, 6d
-    section Phase 4: CLI & Shell IPC
-    veritty CLI tool (Socket & OSC)   :2026-12-08, 7d
-    Shell Integration Scripts         :2026-12-13, 5d
-    section Phase 5: Release
-    Packaging (AppImage, deb, dmg)    :2026-12-18, 10d
-```
+| Phase | Milestone | Status |
+| :--- | :--- | :--- |
+| 0 | Architecture & IPC Protocol Specification | Completed |
+| 1 | Upstream Base Harness & Patch Management | Completed |
+| 2 | Workbench Inversion & Auxiliary Window Routing | Completed |
+| 3 | Dynamic Drawer Overlays | Completed |
+| 4 | CLI Client & Shell Hooks | Completed |
+| 5 | All-in-One Desktop Cockpit & Packaging | Completed |
 
 ---
 
@@ -84,9 +72,10 @@ gantt
 
 ---
 
-### Phase 5: Distribution & Release 1 (Completed)
-- [x] Standalone installer script in [`install.sh`](file:///root/projects/veritty/install.sh).
-- [x] Companion extension auto-bundling into [`build/apply-patches.sh`](file:///root/projects/veritty/build/apply-patches.sh).
-- [x] Automated tarball packaging for CLI, companion extension, and patches.
-- [x] GitHub Actions automated release pipeline on merge to `main`.
-- [x] Release 1.0 tag and asset publishing.
+### Phase 5: All-in-One Desktop Cockpit & Packaging (Completed)
+- [x] Standalone Cockpit desktop packager in [`build/package-desktop.sh`](file:///root/projects/veritty/build/package-desktop.sh).
+- [x] Electron runtime integration and production dependency filtering.
+- [x] Unified launcher binary (`bin/veritty`) supporting direct Cockpit launch and IPC commands.
+- [x] Graphical Cockpit launcher (`bin/veritty-cockpit`) and desktop file (`share/applications/veritty.desktop`).
+- [x] Self-updating installer in [`install.sh`](file:///root/projects/veritty/install.sh) deploying all-in-one desktop Cockpit.
+- [x] GitHub Actions automated release pipeline publishing standalone Linux Cockpit packages.
