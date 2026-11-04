@@ -1,3 +1,20 @@
+diff --git a/src/vs/platform/auxiliaryWindow/electron-main/auxiliaryWindowsMainService.ts b/src/vs/platform/auxiliaryWindow/electron-main/auxiliaryWindowsMainService.ts
+index ea7abed..a74777b 100644
+--- a/src/vs/platform/auxiliaryWindow/electron-main/auxiliaryWindowsMainService.ts
++++ b/src/vs/platform/auxiliaryWindow/electron-main/auxiliaryWindowsMainService.ts
+@@ -89,9 +89,11 @@ export class AuxiliaryWindowsMainService extends Disposable implements IAuxiliar
+ 
+ 	createWindow(details: HandlerDetails): BrowserWindowConstructorOptions {
+ 		const { state, overrides } = this.computeWindowStateAndOverrides(details);
+-		return this.instantiationService.invokeFunction(defaultBrowserWindowOptions, state, overrides, {
++		const options = this.instantiationService.invokeFunction(defaultBrowserWindowOptions, state, overrides, {
+ 			preload: FileAccess.asFileUri('vs/base/parts/sandbox/electron-sandbox/preload-aux.js').fsPath
+ 		});
++		options.title = 'VeriTTY Editor';
++		return options;
+ 	}
+ 
+ 	private computeWindowStateAndOverrides(details: HandlerDetails): { readonly state: IWindowState; readonly overrides: IDefaultBrowserWindowOptionsOverrides } {
 diff --git a/src/vs/workbench/services/editor/common/editorGroupFinder.ts b/src/vs/workbench/services/editor/common/editorGroupFinder.ts
 index a39a122..ace3b72 100644
 --- a/src/vs/workbench/services/editor/common/editorGroupFinder.ts

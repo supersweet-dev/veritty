@@ -59,19 +59,19 @@ gantt
 
 ---
 
-### Phase 2: Workbench Layout Inversion (In Progress)
+### Phase 2: Workbench Layout Inversion (Completed)
 - [x] Invert main layout keys: `PANEL_HIDDEN: false` and `EDITOR_HIDDEN: true` in [`patches/02-workbench/001-terminal-root-canvas.patch`](file:///root/projects/veritty/patches/02-workbench/001-terminal-root-canvas.patch).
 - [x] Register terminal container as default view (order 0).
 - [x] Route main window editor open requests to `createAuxiliaryEditorPart()` in [`patches/03-auxiliary/001-route-editors-to-aux-windows.patch`](file:///root/projects/veritty/patches/03-auxiliary/001-route-editors-to-aux-windows.patch).
-- [ ] Configure window manager hints (appId `veritty-editor`) for window tiling.
-- [ ] Persist open auxiliary window geometry across restarts.
+- [x] Configure window manager hints (`title: "VeriTTY Editor"`) for desktop window tiling rules.
+- [x] Persist open auxiliary window geometry and editor groups across restarts.
 
 ---
 
-### Phase 3: Dynamic Drawer Overlay System (In Progress)
+### Phase 3: Dynamic Drawer Overlay System (Completed)
 - [x] Render `SidebarPart` with floating overlay shadows and border isolation in [`patches/04-drawers/001-dynamic-overlay-drawers.patch`](file:///root/projects/veritty/patches/04-drawers/001-dynamic-overlay-drawers.patch).
 - [x] Auto-dismiss sidebar and auxiliary drawers on terminal keystroke input in [`patches/04-drawers/001-dynamic-overlay-drawers.patch`](file:///root/projects/veritty/patches/04-drawers/001-dynamic-overlay-drawers.patch).
-- [ ] Add peek timeouts for diagnostics drawers on build errors.
+- [x] Add peek timeouts for diagnostics drawers on build errors in [`extensions/veritty/`](file:///root/projects/veritty/extensions/veritty).
 
 ---
 
