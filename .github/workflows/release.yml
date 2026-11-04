@@ -66,7 +66,7 @@ jobs:
           cp "dist-assets/veritty-cli-${TAG}.tar.gz" "dist-assets/veritty-cli.tar.gz"
 
           # 2. Package Patches bundle
-          tar -czf "dist-assets/veritty-patches-${TAG}.tar.gz" patches/ build/
+          tar -czf "dist-assets/veritty-patches-${TAG}.tar.gz" --exclude="upstream" patches/ build/
 
           ls -lh dist-assets/
 
