@@ -1,0 +1,27 @@
+{
+  "name": "veritty-cli",
+  "version": "0.1.0",
+  "description": "High-performance CLI and IPC client for VeriTTY",
+  "main": "dist/index.js",
+  "bin": {
+    "veritty": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "node --test dist/**/*.test.js"
+  },
+  "keywords": [
+    "veritty",
+    "cli",
+    "ipc",
+    "terminal",
+    "editor"
+  ],
+  "author": "VeriTTY Contributors",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.4.0"
+  }
+}
