@@ -2,7 +2,7 @@
   "name": "veritty-companion",
   "displayName": "VeriTTY IPC Companion",
   "description": "IPC socket server and shell integration bridge for VeriTTY",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "publisher": "supersweet-dev",
   "engines": {
     "vscode": "^1.90.0"

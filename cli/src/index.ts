@@ -3,6 +3,7 @@ import { handleOpen } from './commands/open.js';
 import { handleDiff } from './commands/diff.js';
 import { handleDrawer } from './commands/drawer.js';
 import { handleScratch } from './commands/scratch.js';
+import { handleUpdate } from './commands/update.js';
 
 function printHelp(): void {
   console.log(`
@@ -21,6 +22,7 @@ COMMANDS:
                                    Actions: toggle | open | close | peek
                                    Drawers: explorer | git | search | diagnostics
   scratch [--lang=<lang>]        Read stdin and open in a detached scratchpad editor
+  update [--check] [--version=V] Check for or install VeriTTY updates
   help, --help, -h               Show this help message
   version, --version, -v         Show version info
 
@@ -43,7 +45,7 @@ async function main(): Promise<void> {
   }
 
   if (args.includes('-v') || args.includes('--version') || args[0] === 'version') {
-    console.log('veritty-cli 1.0.0');
+    console.log('veritty-cli 1.0.2');
     return;
   }
 
@@ -80,6 +82,19 @@ async function main(): Promise<void> {
         const langArg = args.find((a) => a.startsWith('--lang='));
         const language = langArg ? langArg.split('=')[1] : undefined;
         await handleScratch(language);
+        break;
+      }
+
+      case 'update':
+      case 'upgrade': {
+        const check = args.includes('--check');
+        const versionArg = args.find((a) => a.startsWith('--version='));
+        const targetVersion = versionArg
+          ? versionArg.split('=')[1]
+          : args[1] && !args[1].startsWith('--')
+          ? args[1]
+          : undefined;
+        await handleUpdate({ check, targetVersion });
         break;
       }
 
