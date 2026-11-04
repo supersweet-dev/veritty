@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-publishing
+  cancel-in-progress: false
+
 jobs:
   build-and-release:
     name: Build & Publish Release
@@ -37,7 +41,7 @@ jobs:
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             TAG_NAME="${GITHUB_REF_NAME}"
           else
-            TAG_NAME="v1.1.0"
+            TAG_NAME="v1.1.${{ github.run_number }}"
           fi
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Release tag: ${TAG_NAME}"
