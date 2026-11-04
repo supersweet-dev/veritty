@@ -31,6 +31,12 @@ jobs:
         working-directory: cli
         run: npm test
 
+      - name: Build Companion Extension
+        working-directory: extensions/veritty
+        run: |
+          npm ci || npm install
+          npm run build
+
   verify-patches:
     name: Verify Code-OSS Patches
     runs-on: ubuntu-latest

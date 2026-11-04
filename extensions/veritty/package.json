@@ -1,0 +1,26 @@
+{
+  "name": "veritty-companion",
+  "displayName": "VeriTTY IPC Companion",
+  "description": "IPC socket server and shell integration bridge for VeriTTY",
+  "version": "0.1.0",
+  "publisher": "supersweet-dev",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0"
+  }
+}

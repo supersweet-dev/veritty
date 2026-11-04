@@ -49,6 +49,12 @@ jobs:
           echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
           echo "Release tag: ${TAG_NAME}"
 
+      - name: Install & Test Companion Extension
+        working-directory: extensions/veritty
+        run: |
+          npm ci || npm install
+          npm run build
+
       - name: Package Release Assets
         run: |
           mkdir -p dist-assets
@@ -67,6 +73,9 @@ jobs:
 
           # 2. Package Patches bundle
           tar -czf "dist-assets/veritty-patches-${TAG}.tar.gz" patches/ build/
+
+          # 3. Package Companion Extension bundle
+          tar -czf "dist-assets/veritty-companion-${TAG}.tar.gz" extensions/
 
           ls -la dist-assets/
 

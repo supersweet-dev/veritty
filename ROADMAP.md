@@ -75,10 +75,12 @@ gantt
 
 ---
 
-### Phase 4: CLI Client & Shell Integration (Planned)
-- [ ] Domain socket IPC client (`cli/`).
-- [ ] Shell hooks for bash, zsh, and fish (`shell/`).
-- [ ] OSC escape sequences for directory tracking and exit status markers.
+### Phase 4: CLI Client & Shell Integration (Completed)
+- [x] Domain socket IPC client and parser in [`cli/`](file:///root/projects/veritty/cli).
+- [x] Companion IPC server bridge in [`extensions/veritty/`](file:///root/projects/veritty/extensions/veritty).
+- [x] Shell hooks for bash and zsh ([`shell/veritty.sh`](file:///root/projects/veritty/shell/veritty.sh)) and fish ([`shell/veritty.fish`](file:///root/projects/veritty/shell/veritty.fish)).
+- [x] OSC 7 working directory sync functions and CLI aliases (`v`, `vdiff`, `vdrawer`, `vscratch`).
+- [x] End-to-end socket integration test suite passing.
 
 ---
 
