@@ -16,7 +16,7 @@ index 2c94078..aed3cc0 100644
  	justify-content: flex-end;
  }
 diff --git a/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts b/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
-index 6c11d5d..f8b4cb6 100644
+index 6c11d5d..2371385 100644
 --- a/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
 +++ b/src/vs/workbench/contrib/terminal/browser/terminalInstance.ts
 @@ -76,7 +76,7 @@ import { getWorkspaceForTerminal, preparePathForShell } from '../common/terminal
@@ -36,19 +36,20 @@ index 6c11d5d..f8b4cb6 100644
  	) {
  		super();
  
-@@ -870,6 +871,16 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
+@@ -870,6 +871,17 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
  			this._open();
  		}
  
-+		// VeriTTY: Auto-dismiss visible overlay drawers when typing in terminal
-+		this._register(xterm.raw.onKey(() => {
++		// VeriTTY: Auto-dismiss visible overlay drawers when typing in or focusing terminal
++		const dismissDrawers = () => {
 +			if (this._layoutService.isVisible(Parts.SIDEBAR_PART)) {
 +				this._layoutService.setPartHidden(true, Parts.SIDEBAR_PART);
 +			}
 +			if (this._layoutService.isVisible(Parts.AUXILIARYBAR_PART)) {
 +				this._layoutService.setPartHidden(true, Parts.AUXILIARYBAR_PART);
 +			}
-+		}));
++		};
++		this._register(xterm.raw.onKey(dismissDrawers));
 +
  		return xterm;
  	}
