@@ -1,5 +1,5 @@
 diff --git a/product.json b/product.json
-index 8411532..6fedc04 100644
+index 8411532..7b2ab00 100644
 --- a/product.json
 +++ b/product.json
 @@ -1,11 +1,15 @@
@@ -24,6 +24,66 @@ index 8411532..6fedc04 100644
  	"serverLicenseUrl": "https://github.com/microsoft/vscode/blob/main/LICENSE.txt",
  	"serverGreeting": [],
  	"serverLicense": [],
+diff --git a/src/main.ts b/src/main.ts
+index 1504375..06d275c 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -23,6 +23,11 @@ import { NativeParsedArgs } from './vs/platform/environment/common/argv.js';
+ 
+ const __dirname = path.dirname(fileURLToPath(import.meta.url));
+ 
++// Ensure unbundled dev loader and CSS module discovery are active in unbundled builds
++if (!process.env['VSCODE_DEV']) {
++	process.env['VSCODE_DEV'] = '1';
++}
++
+ perf.mark('code/didStartMain');
+ 
+ perf.mark('code/willLoadMainBundle', {
+@@ -386,7 +391,7 @@ function getArgvConfigPath(): string {
+ 	}
+ 
+ 	let dataFolderName = product.dataFolderName;
+-	if (process.env['VSCODE_DEV']) {
++	if (process.env['VSCODE_DEV'] && product.nameShort !== 'VeriTTY') {
+ 		dataFolderName = `${dataFolderName}-dev`;
+ 	}
+ 
+@@ -477,7 +482,7 @@ function configureCrashReporter(): void {
+ 	const uploadToServer = Boolean(!process.env['VSCODE_DEV'] && submitURL && !crashReporterDirectory);
+ 	crashReporter.start({
+ 		companyName,
+-		productName: process.env['VSCODE_DEV'] ? `${productName} Dev` : productName,
++		productName: (process.env['VSCODE_DEV'] && product.nameShort !== 'VeriTTY') ? `${productName} Dev` : productName,
+ 		submitURL,
+ 		uploadToServer,
+ 		compress: true
+diff --git a/src/vs/platform/environment/node/userDataPath.ts b/src/vs/platform/environment/node/userDataPath.ts
+index 27190b2..9356b5e 100644
+--- a/src/vs/platform/environment/node/userDataPath.ts
++++ b/src/vs/platform/environment/node/userDataPath.ts
+@@ -35,7 +35,7 @@ export function getUserDataPath(cliArgs: NativeParsedArgs, productName: string):
+ function doGetUserDataPath(cliArgs: NativeParsedArgs, productName: string): string {
+ 
+ 	// 0. Running out of sources has a fixed productName
+-	if (process.env['VSCODE_DEV']) {
++	if (process.env['VSCODE_DEV'] && productName !== 'VeriTTY' && productName !== 'veritty') {
+ 		productName = 'code-oss-dev';
+ 	}
+ 
+diff --git a/src/vs/platform/product/common/product.ts b/src/vs/platform/product/common/product.ts
+index 1a2a619..286670b 100644
+--- a/src/vs/platform/product/common/product.ts
++++ b/src/vs/platform/product/common/product.ts
+@@ -28,7 +28,7 @@ else if (globalThis._VSCODE_PRODUCT_JSON && globalThis._VSCODE_PACKAGE_JSON) {
+ 	product = globalThis._VSCODE_PRODUCT_JSON as unknown as IProductConfiguration;
+ 
+ 	// Running out of sources
+-	if (env['VSCODE_DEV']) {
++	if (env['VSCODE_DEV'] && product.nameShort !== 'VeriTTY') {
+ 		Object.assign(product, {
+ 			nameShort: `${product.nameShort} Dev`,
+ 			nameLong: `${product.nameLong} Dev`,
 diff --git a/src/vs/platform/telemetry/common/telemetryService.ts b/src/vs/platform/telemetry/common/telemetryService.ts
 index 51fbb8f..79e2d10 100644
 --- a/src/vs/platform/telemetry/common/telemetryService.ts

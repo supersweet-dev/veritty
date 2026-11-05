@@ -78,6 +78,7 @@ rm -f "${STAGE_DIR}/resources/default_app.asar"
 # Copy Workbench Manifests and Compiled Core
 cp package.json product.json "$STAGE_DIR/resources/app/"
 cp -r out "$STAGE_DIR/resources/app/"
+cp -r resources "$STAGE_DIR/resources/app/"
 
 # Copy Production Dependencies
 echo "--> Copying Production Node Modules..."
@@ -128,6 +129,9 @@ elif [ -f /proc/sys/kernel/apparmor_restrict_unprivileged_userns ] && [ "$(cat /
     SANDBOX_ARGS+=("--no-sandbox")
   fi
 fi
+
+# Ensure Code-OSS unbundled dev loader and CSS module discovery are active
+export VSCODE_DEV=1
 
 # Launch VeriTTY when invoked with no arguments or with a directory target
 if [ $# -eq 0 ]; then

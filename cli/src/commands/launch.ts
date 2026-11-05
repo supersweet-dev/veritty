@@ -51,7 +51,10 @@ export async function handleLaunch(args: string[] = []): Promise<void> {
   const child = spawn(binary, launchArgs, {
     detached: true,
     stdio: 'ignore',
-    env: process.env,
+    env: {
+      ...process.env,
+      VSCODE_DEV: '1',
+    },
   });
 
   child.unref();
